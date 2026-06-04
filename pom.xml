@@ -19,6 +19,11 @@
 
     <modules>
         <module>bank-front-ui</module>
+        <module>bank-accounts</module>
+        <module>bank-cash</module>
+        <module>bank-transfer</module>
+        <module>bank-notifications</module>
+        <module>bank-gateway</module>
     </modules>
 
     <properties>

@@ -18,5 +18,24 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: http://${KEYCLOAK_HOST:localhost}:${KEYCLOAK_PORT:8089}/realms/${KEYCLOAK_REALM:bank}
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+    instances:
+      notificationService:
+        base-config: default
+      outboxScheduler:
+        base-config: default
+
+outbox:
+  scheduler:
+    interval: 5000
+
 server:
   port: ${SERVER_PORT:8085}

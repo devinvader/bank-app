@@ -1,0 +1,187 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: market-postgres
+    env_file: .env
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - bank-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: market-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - bank-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  consul:
+    image: hashicorp/consul:1.15
+    container_name: bank-consul
+    ports:
+      - "8500:8500"
+      - "8600:8600/udp"
+    command: agent -dev -client=0.0.0.0
+    networks:
+      - bank-network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: bank-keycloak
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?currentSchema=keycloak
+      KC_DB_USERNAME: ${DB_USERNAME}
+      KC_DB_PASSWORD: ${DB_PASSWORD}
+      KC_HOSTNAME: keycloak
+      KC_HTTP_PORT: ${KEYCLOAK_PORT}
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    command: start-dev
+    ports:
+      - "${KEYCLOAK_PORT}:${KEYCLOAK_PORT}"
+    networks:
+      - bank-network
+
+  bank-accounts:
+    build:
+      context: .
+      target: bank-accounts
+    container_name: bank-accounts
+    depends_on:
+      postgres:
+        condition: service_healthy
+      consul:
+        condition: service_started
+    env_file: .env
+    environment:
+      SERVER_PORT: 8082
+      DB_SCHEMA: accounts
+    ports:
+      - "8082:8082"
+    networks:
+      - bank-network
+
+  bank-cash:
+    build:
+      context: .
+      target: bank-cash
+    container_name: bank-cash
+    depends_on:
+      postgres:
+        condition: service_healthy
+      consul:
+        condition: service_started
+    env_file: .env
+    environment:
+      SERVER_PORT: 8083
+      DB_SCHEMA: cash
+    ports:
+      - "8083:8083"
+    networks:
+      - bank-network
+
+  bank-transfer:
+    build:
+      context: .
+      target: bank-transfer
+    container_name: bank-transfer
+    depends_on:
+      postgres:
+        condition: service_healthy
+      consul:
+        condition: service_started
+    env_file: .env
+    environment:
+      SERVER_PORT: 8084
+      DB_SCHEMA: transfer
+    ports:
+      - "8084:8084"
+    networks:
+      - bank-network
+
+  bank-notifications:
+    build:
+      context: .
+      target: bank-notifications
+    container_name: bank-notifications
+    depends_on:
+      postgres:
+        condition: service_healthy
+      consul:
+        condition: service_started
+    env_file: .env
+    environment:
+      SERVER_PORT: 8085
+      DB_SCHEMA: notifications
+    ports:
+      - "8085:8085"
+    networks:
+      - bank-network
+
+  bank-gateway:
+    build:
+      context: .
+      target: bank-gateway
+    container_name: bank-gateway
+    depends_on:
+      postgres:
+        condition: service_healthy
+      consul:
+        condition: service_started
+    env_file: .env
+    environment:
+      SERVER_PORT: 8081
+      DB_SCHEMA: gateway
+    ports:
+      - "8081:8081"
+    networks:
+      - bank-network
+
+  bank-front-ui:
+    build:
+      context: .
+      target: bank-front-ui
+    container_name: bank-front-ui
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      consul:
+        condition: service_started
+    env_file: .env
+    environment:
+      SERVER_PORT: 8080
+    ports:
+      - "8080:8080"
+    networks:
+      - bank-network
+
+volumes:
+  postgres-data:
+
+networks:
+  bank-network:
+    driver: bridge

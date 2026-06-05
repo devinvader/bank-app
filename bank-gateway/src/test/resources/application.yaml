@@ -1,9 +1,14 @@
 spring:
-  datasource:
-    url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
-  liquibase:
-    enabled: false
+  config:
+    import: ""
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.oauth2.client.reactive.ReactiveOAuth2ClientAutoConfiguration
+      - org.springframework.cloud.consul.ConsulAutoConfiguration
+      - org.springframework.cloud.consul.discovery.ConsulDiscoveryClientAutoConfiguration
+      - org.springframework.cloud.consul.config.ConsulConfigAutoConfiguration
+  application:
+    name: bank-gateway-test
   cloud:
     consul:
       enabled: false
@@ -11,3 +16,30 @@ spring:
         enabled: false
       discovery:
         enabled: false
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+    instances:
+      accountsCircuitBreaker:
+        base-config: default
+      cashCircuitBreaker:
+        base-config: default
+      transferCircuitBreaker:
+        base-config: default
+      notificationsCircuitBreaker:
+        base-config: default
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+server:
+  port: 0

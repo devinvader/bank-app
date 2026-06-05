@@ -3,20 +3,126 @@ spring:
     import: "consul:"
   application:
     name: bank-gateway
-  datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:market}?currentSchema=gateway
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgres}
-  liquibase:
-    change-log: classpath:db/changelog/db.changelog-master.yaml
   cloud:
     consul:
+      discovery:
+        instance-id: ${spring.application.name}:${server.port}
       host: ${CONSUL_HOST:localhost}
       port: ${CONSUL_PORT:8500}
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+      httpclient:
+        connect-timeout: 2000
+        response-timeout: 10s
+      routes:
+        - id: accounts
+          uri: lb://bank-accounts
+          predicates:
+            - Path=/api/accounts/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: accountsCircuitBreaker
+                fallbackUri: forward:/fallback/accounts
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY, GATEWAY_TIMEOUT, SERVICE_UNAVAILABLE
+                backoff:
+                  firstBackoff: 50ms
+                  maxBackoff: 500ms
+                  factor: 2
+        - id: cash
+          uri: lb://bank-cash
+          predicates:
+            - Path=/api/cash/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: cashCircuitBreaker
+                fallbackUri: forward:/fallback/cash
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY, GATEWAY_TIMEOUT, SERVICE_UNAVAILABLE
+                backoff:
+                  firstBackoff: 50ms
+                  maxBackoff: 500ms
+                  factor: 2
+        - id: transfer
+          uri: lb://bank-transfer
+          predicates:
+            - Path=/api/transfer/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: transferCircuitBreaker
+                fallbackUri: forward:/fallback/transfer
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY, GATEWAY_TIMEOUT, SERVICE_UNAVAILABLE
+                backoff:
+                  firstBackoff: 50ms
+                  maxBackoff: 500ms
+                  factor: 2
+        - id: notifications
+          uri: lb://bank-notifications
+          predicates:
+            - Path=/api/notifications/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: notificationsCircuitBreaker
+                fallbackUri: forward:/fallback/notifications
+            - name: Retry
+              args:
+                retries: 3
+                statuses: BAD_GATEWAY, GATEWAY_TIMEOUT, SERVICE_UNAVAILABLE
+                backoff:
+                  firstBackoff: 50ms
+                  maxBackoff: 500ms
+                  factor: 2
   security:
     oauth2:
       resourceserver:
         jwt:
           issuer-uri: http://${KEYCLOAK_HOST:localhost}:${KEYCLOAK_PORT:8089}/realms/${KEYCLOAK_REALM:bank}
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+    instances:
+      accountsCircuitBreaker:
+        base-config: default
+      cashCircuitBreaker:
+        base-config: default
+      transferCircuitBreaker:
+        base-config: default
+      notificationsCircuitBreaker:
+        base-config: default
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+
 server:
   port: ${SERVER_PORT:8081}

@@ -1,0 +1,46 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-cash-schema
+      author: devinvader
+      changes:
+        - sql:
+            sql: CREATE SCHEMA IF NOT EXISTS cash
+  - changeSet:
+      id: 001-create-cash-operations-table
+      author: devinvader
+      changes:
+        - createTable:
+            tableName: cash_operations
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: account_id
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: type
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount
+                  type: DECIMAL(19, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_cash_account
+            tableName: cash_operations
+            columns:
+              - column:
+                  name: account_id

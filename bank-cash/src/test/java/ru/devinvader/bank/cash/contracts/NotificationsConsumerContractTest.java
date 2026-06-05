@@ -4,11 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.contract.stubrunner.StubFinder;
-import org.springframework.cloud.contract.stubrunner.spring.AutoConfigureStubRunner;
-import org.springframework.cloud.contract.stubrunner.spring.StubRunnerProperties;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -18,17 +13,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.URL;
 
-@SpringBootTest(properties = {
-    "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientAutoConfiguration"
-})
-@AutoConfigureStubRunner(
-    ids = "ru.devinvader.bank.notifications:bank-notifications:+:stubs",
-    stubsMode = StubRunnerProperties.StubsMode.LOCAL
-)
-class NotificationsConsumerContractTest {
-
-    @Autowired
-    private StubFinder stubFinder;
+class NotificationsConsumerContractTest extends CashControllerBase {
 
     @Test
     void shouldSendNotificationViaContract() {

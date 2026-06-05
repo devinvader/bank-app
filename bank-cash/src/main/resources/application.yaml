@@ -4,26 +4,48 @@ spring:
   application:
     name: bank-cash
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:market}?currentSchema=cash
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:bank}?currentSchema=cash
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
   cloud:
     consul:
+      discovery:
+        instance-id: ${spring.application.name}:${server.port}
       host: ${CONSUL_HOST:localhost}
       port: ${CONSUL_PORT:8500}
   security:
     oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://${KEYCLOAK_HOST:localhost}:${KEYCLOAK_PORT:8089}/realms/${KEYCLOAK_REALM:bank}
       client:
         registration:
           keycloak:
             client-id: bank-cash
-            client-secret: ${KEYCLOAK_CLIENT_SECRET:secret}
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:cash-secret}
             authorization-grant-type: client_credentials
             scope: openid
         provider:
           keycloak:
             issuer-uri: http://${KEYCLOAK_HOST:localhost}:${KEYCLOAK_PORT:8089}/realms/${KEYCLOAK_REALM:bank}
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+    instances:
+      cashService:
+        base-config: default
+      accountsService:
+        base-config: default
+      notificationService:
+        base-config: default
+
 server:
   port: ${SERVER_PORT:8083}

@@ -90,7 +90,7 @@ public class AccountServiceImpl implements AccountService {
                 .updatedAt(Instant.now())
                 .build();
         repository.save(account);
-        notificationClient.send("DEBIT", login, amount, "Debited " + amount + " from " + login);
+        notificationClient.send("WITHDRAWAL", login, amount, "Debited " + amount + " from " + login);
     }
 
     public void fallbackDebit(String login, BigDecimal amount, Throwable t) {
@@ -109,7 +109,7 @@ public class AccountServiceImpl implements AccountService {
                 .updatedAt(Instant.now())
                 .build();
         repository.save(account);
-        notificationClient.send("CREDIT", login, amount, "Credited " + amount + " to " + login);
+        notificationClient.send("DEPOSIT", login, amount, "Credited " + amount + " to " + login);
     }
 
     public void fallbackCredit(String login, BigDecimal amount, Throwable t) {

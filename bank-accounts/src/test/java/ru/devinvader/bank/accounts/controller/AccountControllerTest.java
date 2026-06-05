@@ -163,6 +163,34 @@ class AccountControllerTest {
     }
 
     @Test
+    void getByLogin_withValidJwt_shouldReturnAccount() throws Exception {
+        var response = new AccountResponse("user1", "Иван Иванов", LocalDate.of(1990, 1, 1), BigDecimal.valueOf(1000));
+        when(accountService.getByLogin("user1")).thenReturn(response);
+
+        mockMvc.perform(get("/api/accounts/user1")
+                        .with(jwt().jwt(jwt -> jwt.claim("scope", "accounts:read"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.login").value("user1"))
+                .andExpect(jsonPath("$.balance").value(1000));
+    }
+
+    @Test
+    void getByLogin_withWrongScope_shouldReturnForbidden() throws Exception {
+        mockMvc.perform(get("/api/accounts/user1")
+                        .with(jwt().jwt(jwt -> jwt.claim("scope", "wrong:scope"))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void getByLogin_accountNotFound_shouldReturnNotFound() throws Exception {
+        when(accountService.getByLogin("user1")).thenThrow(new AccountNotFoundException("user1"));
+
+        mockMvc.perform(get("/api/accounts/user1")
+                        .with(jwt().jwt(jwt -> jwt.claim("scope", "accounts:read"))))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void update_ageValidation_shouldReturnBadRequest() throws Exception {
         when(accountService.update(eq("user1"), any()))
                 .thenThrow(new AgeValidationException("User must be at least 18"));

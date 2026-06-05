@@ -47,5 +47,8 @@ resilience4j:
       notificationService:
         base-config: default
 
+notifications:
+  base-url: http://bank-notifications
+
 server:
   port: ${SERVER_PORT:8083}

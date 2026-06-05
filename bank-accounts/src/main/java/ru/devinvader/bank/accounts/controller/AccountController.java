@@ -33,6 +33,12 @@ public class AccountController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{login}")
+    public ResponseEntity<AccountResponse> getByLogin(@PathVariable String login) {
+        var response = accountService.getByLogin(login);
+        return ResponseEntity.ok(response);
+    }
+
     @PutMapping("/me")
     public ResponseEntity<AccountResponse> updateCurrentAccount(
             @AuthenticationPrincipal Jwt jwt,

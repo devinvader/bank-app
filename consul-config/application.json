@@ -1,0 +1,26 @@
+[
+  {
+    "key": "config/application/resilience4j.circuitbreaker.configs.default.sliding-window-size",
+    "value": "MTA="
+  },
+  {
+    "key": "config/application/resilience4j.circuitbreaker.configs.default.failure-rate-threshold",
+    "value": "NTA="
+  },
+  {
+    "key": "config/application/resilience4j.circuitbreaker.configs.default.wait-duration-in-open-state",
+    "value": "MTAwMDA="
+  },
+  {
+    "key": "config/application/resilience4j.circuitbreaker.configs.default.permitted-number-of-calls-in-half-open-state",
+    "value": "Mw=="
+  },
+  {
+    "key": "config/application/notifications.connect-timeout",
+    "value": "NTAwMA=="
+  },
+  {
+    "key": "config/application/notifications.read-timeout",
+    "value": "MTAwMDA="
+  }
+]

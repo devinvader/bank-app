@@ -1,5 +1,11 @@
 package ru.devinvader.bank.frontui.client;
 
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Supplier;
+
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -8,13 +14,13 @@ import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClient.ResponseSpec.ErrorHandler;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
 import ru.devinvader.bank.frontui.exception.*;
 import ru.devinvader.bank.frontui.model.*;
 import ru.devinvader.bank.frontui.service.TokenProvider;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.function.Supplier;
+import static ru.devinvader.bank.frontui.config.RequestIdFilter.REQUEST_ID_ATTRIBUTE;
 
 @Slf4j
 @Component
@@ -30,6 +36,7 @@ public class BankApiClient {
                 .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
                 .requestInterceptor((request, body, execution) -> {
                     request.getHeaders().setBearerAuth(tokenProvider.getAccessToken());
+                    propagateTraceHeaders(request);
                     return execution.execute(request, body);
                 })
                 .build();
@@ -133,6 +140,17 @@ public class BankApiClient {
         if (resp.getStatusCode() == HttpStatus.UNAUTHORIZED)
             throw new UnauthorizedException("Unauthorized");
         throw new BadRequestException("Client error: " + resp.getStatusCode());
+    }
+
+    private static void propagateTraceHeaders(HttpRequest request) {
+        var attrs = RequestContextHolder.getRequestAttributes();
+        if (attrs != null) {
+            var requestId = (String) attrs.getAttribute(REQUEST_ID_ATTRIBUTE, RequestAttributes.SCOPE_REQUEST);
+            if (requestId != null) {
+                request.getHeaders().set("X-Request-Id", requestId);
+                request.getHeaders().set("X-Trace-Id", UUID.randomUUID().toString());
+            }
+        }
     }
 
     private static ErrorHandler serverError(String service) {

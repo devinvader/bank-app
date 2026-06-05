@@ -9,26 +9,44 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.contract.stubrunner.StubFinder;
 import org.springframework.cloud.contract.stubrunner.spring.AutoConfigureStubRunner;
 import org.springframework.cloud.contract.stubrunner.spring.StubRunnerProperties;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+import ru.devinvader.bank.transfer.integration.TestcontainersConfiguration;
 
 import java.net.URL;
 
-@SpringBootTest(properties = {
-    "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientAutoConfiguration"
-})
+@SpringBootTest
 @AutoConfigureStubRunner(
     ids = "ru.devinvader.bank.notifications:bank-notifications:+:stubs",
     stubsMode = StubRunnerProperties.StubsMode.LOCAL
 )
+@Import(TestcontainersConfiguration.class)
 class NotificationsConsumerContractTest {
 
     @Autowired
     private StubFinder stubFinder;
+
+    @MockitoBean
+    private JwtDecoder jwtDecoder;
+
+    @MockitoBean
+    private ClientRegistrationRepository clientRegistrationRepository;
+
+    @MockitoBean
+    private OAuth2AuthorizedClientService authorizedClientService;
+
+    @MockitoBean
+    private WebClient.Builder webClientBuilder;
 
     @Test
     void shouldCreateNotificationViaContract() {

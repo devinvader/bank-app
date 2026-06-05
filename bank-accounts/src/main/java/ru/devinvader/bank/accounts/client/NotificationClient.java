@@ -17,7 +17,7 @@ public class NotificationClient {
     private final String notificationsBaseUrl;
 
     public NotificationClient(WebClient.Builder webClientBuilder,
-                              @Value("${notifications.base-url:http://bank-notifications}") String notificationsBaseUrl) {
+                              @Value("${notifications.base-url:lb://bank-notifications}") String notificationsBaseUrl) {
         this.webClientBuilder = webClientBuilder;
         this.notificationsBaseUrl = notificationsBaseUrl;
     }

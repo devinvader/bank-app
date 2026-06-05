@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:15
-    container_name: market-postgres
+    container_name: bank-postgres
     env_file: .env
     environment:
       POSTGRES_DB: ${DB_NAME}
@@ -21,7 +21,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: market-redis
+    container_name: bank-redis
     ports:
       - "6379:6379"
     networks:
@@ -41,6 +41,11 @@ services:
     command: agent -dev -client=0.0.0.0
     networks:
       - bank-network
+    healthcheck:
+      test: ["CMD", "consul", "members"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   keycloak:
     image: quay.io/keycloak/keycloak:latest
@@ -58,7 +63,9 @@ services:
       KC_HTTP_PORT: ${KEYCLOAK_PORT}
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-    command: start-dev
+    command: start-dev --import-realm
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
     ports:
       - "${KEYCLOAK_PORT}:${KEYCLOAK_PORT}"
     networks:
@@ -73,7 +80,7 @@ services:
       postgres:
         condition: service_healthy
       consul:
-        condition: service_started
+        condition: service_healthy
     env_file: .env
     environment:
       SERVER_PORT: 8082
@@ -92,7 +99,7 @@ services:
       postgres:
         condition: service_healthy
       consul:
-        condition: service_started
+        condition: service_healthy
     env_file: .env
     environment:
       SERVER_PORT: 8083
@@ -111,7 +118,7 @@ services:
       postgres:
         condition: service_healthy
       consul:
-        condition: service_started
+        condition: service_healthy
     env_file: .env
     environment:
       SERVER_PORT: 8084
@@ -130,7 +137,7 @@ services:
       postgres:
         condition: service_healthy
       consul:
-        condition: service_started
+        condition: service_healthy
     env_file: .env
     environment:
       SERVER_PORT: 8085
@@ -149,7 +156,7 @@ services:
       postgres:
         condition: service_healthy
       consul:
-        condition: service_started
+        condition: service_healthy
     env_file: .env
     environment:
       SERVER_PORT: 8081
@@ -170,7 +177,7 @@ services:
       redis:
         condition: service_healthy
       consul:
-        condition: service_started
+        condition: service_healthy
     env_file: .env
     environment:
       SERVER_PORT: 8080

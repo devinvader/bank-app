@@ -3,6 +3,7 @@ package ru.devinvader.bank.cash.service;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -22,6 +23,9 @@ import java.time.Instant;
 public class CashServiceImpl implements CashService {
     private final CashRepository repository;
     private final WebClient.Builder webClientBuilder;
+
+    @Value("${notifications.base-url:lb://bank-notifications}")
+    private String notificationsBaseUrl;
 
     @Override
     @Transactional
@@ -75,7 +79,7 @@ public class CashServiceImpl implements CashService {
     BigDecimal updateBalance(String login, BigDecimal amount, String operation) {
         var response = webClientBuilder.build()
                 .post()
-                .uri("http://bank-accounts/api/accounts/{login}/{operation}", login, operation)
+                .uri("lb://bank-accounts/api/accounts/{login}/{operation}", login, operation)
                 .bodyValue(new BalancePayload(amount))
                 .retrieve()
                 .toBodilessEntity()
@@ -88,7 +92,7 @@ public class CashServiceImpl implements CashService {
         try {
             var accountResponse = webClientBuilder.build()
                     .get()
-                    .uri("http://bank-accounts/api/accounts/{login}", login)
+                    .uri("lb://bank-accounts/api/accounts/{login}", login)
                     .retrieve()
                     .bodyToMono(AccountResponse.class)
                     .block();
@@ -109,7 +113,7 @@ public class CashServiceImpl implements CashService {
         try {
             webClientBuilder.build()
                     .post()
-                    .uri("http://bank-notifications/api/notifications")
+                    .uri(notificationsBaseUrl + "/api/notifications")
                     .bodyValue(new NotificationPayload(
                             type == CashOperationType.DEPOSIT ? "DEPOSIT" : "WITHDRAWAL",
                             login,

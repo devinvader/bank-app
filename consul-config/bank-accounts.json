@@ -1,0 +1,14 @@
+[
+  {
+    "key": "config/bank-accounts/notifications.service-name",
+    "value": "YmFuay1ub3RpZmljYXRpb25z"
+  },
+  {
+    "key": "config/bank-accounts/notifications.api-path",
+    "value": "L2FwaS9ub3RpZmljYXRpb25z"
+  },
+  {
+    "key": "config/bank-accounts/spring.security.oauth2.resourceserver.jwt.issuer-uri",
+    "value": "aHR0cDovL2tleWNsb2FrOjgwODkvcmVhbG1zL2Jhbms="
+  }
+]

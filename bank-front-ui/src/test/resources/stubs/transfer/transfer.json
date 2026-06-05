@@ -1,0 +1,25 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/api/transfer",
+    "headers": {
+      "Authorization": {
+        "matches": "Bearer .*"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "fromLogin": "user1",
+      "toLogin": "user2",
+      "amount": 50.00,
+      "status": "COMPLETED",
+      "timestamp": "2025-01-01T00:00:00Z"
+    }
+  }
+}

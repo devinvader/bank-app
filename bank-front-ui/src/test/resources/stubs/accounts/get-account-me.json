@@ -1,0 +1,23 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/api/accounts/me",
+    "headers": {
+      "Authorization": {
+        "matches": "Bearer .*"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "login": "user1",
+      "name": "Иван Иванов",
+      "birthdate": "1990-01-01",
+      "balance": 1000.00
+    }
+  }
+}

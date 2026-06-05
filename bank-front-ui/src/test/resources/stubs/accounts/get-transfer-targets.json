@@ -1,0 +1,25 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/api/accounts/transfer-targets",
+    "headers": {
+      "Authorization": {
+        "matches": "Bearer .*"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": [
+      {
+        "login": "user2",
+        "name": "Петр Петров",
+        "birthdate": "1992-05-10",
+        "balance": 500.00
+      }
+    ]
+  }
+}

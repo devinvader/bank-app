@@ -16,11 +16,14 @@
     <div class="container p-2">
         <div class="row p-2">
             <div class="col">
-                <div class="hstack gap-3">
-                    <h2>
-                        <span class="badge text-bg-info text-white">Банк</span>
-                    </h2>
-                </div>
+                    <div class="hstack gap-3">
+                        <h2>
+                            <span class="badge text-bg-info text-white">Банк</span>
+                        </h2>
+                        <form method="post" action="/logout" class="ms-auto">
+                            <button type="submit" class="btn btn-outline-danger">Выйти</button>
+                        </form>
+                    </div>
             </div>
         </div>
         <div class="row p-2">
@@ -70,11 +73,11 @@
                                     <label for="cash_value">Сумма, руб.</label>
                                 </h6>
                                 <p>
-                                    <input type="number" class="form-control" id="cash_value" name="value" placeholder="100" required>
+                                    <input type="number" step="0.01" min="0.01" class="form-control" id="cash_value" name="value" placeholder="100" required>
                                 </p>
                             </div>
-                            <button type="submit" class="btn btn-secondary" name="action" value="PUT">Положить</button>
-                            <button type="submit" class="btn btn-secondary" name="action" value="GET">Снять</button>
+                            <button type="submit" class="btn btn-secondary" name="action" value="DEPOSIT">Положить</button>
+                            <button type="submit" class="btn btn-secondary" name="action" value="WITHDRAW">Снять</button>
                         </form>
                     </div>
                 </div>
@@ -94,6 +97,7 @@
                                 </h6>
                                 <p>
                                     <select class="form-select" id="to_account" name="login" required>
+                                        <option value="">-- Выберите получателя --</option>
                                         <option th:each="account : ${accounts}" th:value="${account.login}" th:text="${account.name}"/>
                                     </select>
                                 </p>
@@ -103,7 +107,7 @@
                                     <label for="transfer_value">Сумма, руб.</label>
                                 </h6>
                                 <p>
-                                    <input type="text" class="form-control" name="value" id="transfer_value" placeholder="100" required>
+                                    <input type="number" step="0.01" min="0.01" class="form-control" name="value" id="transfer_value" placeholder="100" required>
                                 </p>
                             </div>
                             <button type="submit" class="btn btn-secondary">Перевести</button>

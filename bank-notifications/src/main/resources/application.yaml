@@ -4,13 +4,15 @@ spring:
   application:
     name: bank-notifications
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:market}?currentSchema=notifications
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:bank}?currentSchema=${DB_SCHEMA:notifications}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
   cloud:
     consul:
+      discovery:
+        instance-id: ${spring.application.name}:${server.port}
       host: ${CONSUL_HOST:localhost}
       port: ${CONSUL_PORT:8500}
   security:
@@ -30,9 +32,6 @@ resilience4j:
     instances:
       notificationService:
         base-config: default
-      outboxScheduler:
-        base-config: default
-
 outbox:
   scheduler:
     interval: 5000

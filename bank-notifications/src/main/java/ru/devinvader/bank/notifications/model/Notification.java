@@ -2,6 +2,9 @@ package ru.devinvader.bank.notifications.model;
 
 import lombok.Builder;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.PersistenceCreator;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.math.BigDecimal;
@@ -18,6 +21,25 @@ public record Notification(
         String message,
         NotificationStatus status,
         Instant createdAt,
-        Instant sentAt
-) {
+        Instant sentAt,
+        int retryCount,
+        @Transient Boolean newEntity
+) implements Persistable<UUID> {
+
+    @PersistenceCreator
+    public Notification(UUID id, NotificationType type, String accountId,
+                        BigDecimal amount, String message, NotificationStatus status,
+                        Instant createdAt, Instant sentAt, int retryCount) {
+        this(id, type, accountId, amount, message, status, createdAt, sentAt, retryCount, null);
+    }
+
+    @Override
+    public UUID getId() {
+        return id;
+    }
+
+    @Override
+    public boolean isNew() {
+        return Boolean.TRUE.equals(newEntity);
+    }
 }

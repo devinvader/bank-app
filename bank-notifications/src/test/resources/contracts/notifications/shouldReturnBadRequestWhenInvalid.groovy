@@ -1,7 +1,7 @@
 import org.springframework.cloud.contract.spec.Contract
 
 Contract.make {
-    description("Запрос некорректной информации")
+    description("Запрос с некорректными полями")
     request {
         method 'POST'
         url '/api/notifications'
@@ -10,7 +10,7 @@ Contract.make {
             header("Authorization", "Bearer test-token")
         }
         body([
-            type: "",
+            type: "TRANSFER",
             accountId: "",
             amount: -1,
             message: ""

@@ -1,6 +1,6 @@
 spring:
   liquibase:
-    enabled: false
+    change-log: classpath:db/changelog/db.changelog-master.yaml
   cloud:
     consul:
       enabled: false
@@ -8,3 +8,7 @@ spring:
         enabled: false
       discovery:
         enabled: false
+
+resilience4j:
+  circuitbreaker:
+    enabled: false

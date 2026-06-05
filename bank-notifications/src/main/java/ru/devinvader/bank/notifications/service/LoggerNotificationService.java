@@ -31,23 +31,24 @@ public class LoggerNotificationService implements NotificationService {
                 .message(request.message())
                 .status(NotificationStatus.PENDING)
                 .createdAt(Instant.now())
+                .newEntity(true)
                 .build();
 
-        // оверинжениринг для консоли, но надо по заданию)
         notification = repository.save(notification);
 
-        // т.к. фактически нет возможности что это зафеилится, в try catch не буду оборачивать
         log.info("Notification sent: type={}, accountId={}, amount={}, message={}",
                 notification.type(), notification.accountId(),
                 notification.amount(), notification.message());
         notification = notification.toBuilder()
                 .status(NotificationStatus.SENT)
                 .sentAt(Instant.now())
+                .newEntity(false)
                 .build();
 
         return repository.save(notification);
     }
 
+    @Transactional
     public Notification fallbackSend(NotificationRequest request, Throwable t) {
         log.error("Circuit breaker fallback triggered for notification: {}", t.getMessage());
         Notification notification = Notification.builder()
@@ -58,6 +59,7 @@ public class LoggerNotificationService implements NotificationService {
                 .message(request.message())
                 .status(NotificationStatus.FAILED)
                 .createdAt(Instant.now())
+                .newEntity(true)
                 .build();
         return repository.save(notification);
     }

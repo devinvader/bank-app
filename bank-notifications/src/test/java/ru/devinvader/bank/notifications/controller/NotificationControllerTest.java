@@ -39,7 +39,7 @@ class NotificationControllerTest {
     @Test
     void createNotification_withValidJwtAndBody_shouldReturnOk() throws Exception {
         var notification = new Notification(UUID.randomUUID(), NotificationType.TRANSFER, "user123",
-                new BigDecimal("100.50"), "Test transfer", NotificationStatus.SENT, Instant.now(), Instant.now());
+                new BigDecimal("100.50"), "Test transfer", NotificationStatus.SENT, Instant.now(), Instant.now(), 0, null);
 
         when(notificationService.send(any(NotificationRequest.class))).thenReturn(notification);
 

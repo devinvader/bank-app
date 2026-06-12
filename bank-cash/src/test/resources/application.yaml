@@ -1,46 +1,11 @@
 spring:
   config:
-    import: ""
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2ClientAutoConfiguration
-      - org.springframework.boot.security.oauth2.client.autoconfigure.servlet.OAuth2ClientWebSecurityAutoConfiguration
-      - org.springframework.cloud.consul.ConsulAutoConfiguration
-      - org.springframework.cloud.consul.discovery.ConsulDiscoveryClientAutoConfiguration
-  application:
-    name: bank-cash-test
+    import: classpath:application-test-common.yaml
   datasource:
-    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;INIT=CREATE SCHEMA IF NOT EXISTS cash
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
+    hikari:
+      connection-init-sql: SET search_path TO cash,public
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
-    default-schema: public
-  cloud:
-    consul:
-      enabled: false
-      discovery:
-        enabled: false
-      config:
-        enabled: false
-  security:
-    oauth2:
-      client:
-        registration:
-          keycloak:
-            client-id: bank-cash
-            client-secret: test-secret
-            authorization-grant-type: client_credentials
-            scope: openid
-        provider:
-          keycloak:
-            issuer-uri: http://localhost:8089/realms/bank
-
-resilience4j:
-  circuitbreaker:
-    enabled: false
-
-server:
-  port: 0
+    default-schema: cash
+    liquibase-schema: public

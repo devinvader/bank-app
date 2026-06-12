@@ -10,11 +10,13 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.devinvader.bank.cash.config.SecurityConfig;
 import ru.devinvader.bank.cash.config.TestSecurityConfig;
+import ru.devinvader.bank.common.config.CurrentUserWebMvcConfigurer;
 import ru.devinvader.bank.cash.model.CashOperationType;
 import ru.devinvader.bank.cash.model.CashResponse;
 import ru.devinvader.bank.cash.service.CashService;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -24,8 +26,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(CashController.class)
-@Import({SecurityConfig.class, TestSecurityConfig.class})
-@TestPropertySource(properties = {"spring.autoconfigure.exclude=org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2ClientAutoConfiguration,org.springframework.boot.security.oauth2.client.autoconfigure.servlet.OAuth2ClientServletAutoConfiguration"})
+@Import({SecurityConfig.class, TestSecurityConfig.class, CurrentUserWebMvcConfigurer.class})
+@TestPropertySource(properties = {"spring.autoconfigure.exclude=org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2ClientAutoConfiguration,org.springframework.boot.security.oauth2.client.autoconfigure.servlet.OAuth2ClientServletAutoConfiguration", "spring.main.allow-bean-definition-overriding=true"})
 class CashControllerTest {
 
     @Autowired
@@ -36,13 +38,13 @@ class CashControllerTest {
 
     @Test
     void deposit_withValidJwt_shouldReturnOk() throws Exception {
-        var response = new CashResponse("user1", BigDecimal.valueOf(1100),
+        var response = new CashResponse(UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a"), BigDecimal.valueOf(1100),
                 CashOperationType.DEPOSIT, BigDecimal.valueOf(100));
         when(cashService.deposit(any(), any())).thenReturn(response);
 
         mockMvc.perform(post("/api/cash/deposit")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "cash:operate")
-                                .claim("preferred_username", "user1")))
+                                .claim("sub", "afd94176-3179-4285-9f6b-96fd9131628a")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -55,13 +57,13 @@ class CashControllerTest {
 
     @Test
     void withdraw_withValidJwt_shouldReturnOk() throws Exception {
-        var response = new CashResponse("user1", BigDecimal.valueOf(900),
+        var response = new CashResponse(UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a"), BigDecimal.valueOf(900),
                 CashOperationType.WITHDRAWAL, BigDecimal.valueOf(100));
         when(cashService.withdraw(any(), any())).thenReturn(response);
 
         mockMvc.perform(post("/api/cash/withdraw")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "cash:operate")
-                                .claim("preferred_username", "user1")))
+                                .claim("sub", "afd94176-3179-4285-9f6b-96fd9131628a")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {

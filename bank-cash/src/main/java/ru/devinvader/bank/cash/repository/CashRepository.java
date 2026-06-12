@@ -10,5 +10,5 @@ import java.util.UUID;
 @Repository
 public interface CashRepository extends CrudRepository<CashOperation, UUID> {
 
-    List<CashOperation> findByAccountId(String accountId);
+    List<CashOperation> findByAccountId(UUID accountId);
 }

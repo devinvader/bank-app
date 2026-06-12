@@ -19,7 +19,7 @@ Contract.make {
             contentType(applicationJson())
         }
         body([
-            accountId: "user1",
+            accountId: "afd94176-3179-4285-9f6b-96fd9131628a",
             newBalance: $(anyPositiveInt()),
             type: "WITHDRAWAL",
             amount: 50

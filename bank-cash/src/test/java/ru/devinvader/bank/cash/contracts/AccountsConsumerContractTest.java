@@ -28,7 +28,7 @@ class AccountsConsumerContractTest extends CashControllerBase {
             entity, String.class);
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
-        assertThat(response.getBody()).contains("user1");
+        assertThat(response.getBody()).contains("afd94176-3179-4285-9f6b-96fd9131628a");
     }
 
     @Test
@@ -41,12 +41,12 @@ class AccountsConsumerContractTest extends CashControllerBase {
 
         var entity = new HttpEntity<>(headers);
         ResponseEntity<String> response = restTemplate.exchange(
-            stubUrl + "/api/accounts/user1",
+            stubUrl + "/api/accounts/afd94176-3179-4285-9f6b-96fd9131628a",
             org.springframework.http.HttpMethod.GET,
             entity, String.class);
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
-        assertThat(response.getBody()).contains("user1");
+        assertThat(response.getBody()).contains("afd94176-3179-4285-9f6b-96fd9131628a");
     }
 
     @Test
@@ -66,7 +66,7 @@ class AccountsConsumerContractTest extends CashControllerBase {
 
         var entity = new HttpEntity<>(requestBody, headers);
         ResponseEntity<String> response = restTemplate.postForEntity(
-            stubUrl + "/api/accounts/user1/debit", entity, String.class);
+            stubUrl + "/api/accounts/afd94176-3179-4285-9f6b-96fd9131628a/debit", entity, String.class);
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
     }
@@ -88,7 +88,7 @@ class AccountsConsumerContractTest extends CashControllerBase {
 
         var entity = new HttpEntity<>(requestBody, headers);
         ResponseEntity<String> response = restTemplate.postForEntity(
-            stubUrl + "/api/accounts/user1/credit", entity, String.class);
+            stubUrl + "/api/accounts/afd94176-3179-4285-9f6b-96fd9131628a/credit", entity, String.class);
 
         assertThat(response.getStatusCode().value()).isEqualTo(200);
     }

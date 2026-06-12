@@ -20,6 +20,7 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/cash/deposit")
                         .hasAuthority("SCOPE_cash:operate")
                         .requestMatchers(HttpMethod.POST, "/api/cash/withdraw")

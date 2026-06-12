@@ -11,7 +11,7 @@ Contract.make {
         }
         body([
             type: "TRANSFER",
-            accountId: "user1",
+            accountId: "afd94176-3179-4285-9f6b-96fd9131628a",
             amount: 100.50,
             message: "Получено от user2"
         ])
@@ -24,7 +24,7 @@ Contract.make {
         body([
             id: $(anyUuid()),
             type: "TRANSFER",
-            accountId: "user1",
+            accountId: "afd94176-3179-4285-9f6b-96fd9131628a",
             amount: 100.50,
             message: "Получено от user2",
             status: "SENT",

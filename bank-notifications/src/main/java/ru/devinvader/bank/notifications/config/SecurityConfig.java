@@ -20,6 +20,7 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/notifications")
                         .hasAuthority("SCOPE_notifications:send")
                         .anyRequest().authenticated()

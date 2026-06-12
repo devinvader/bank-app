@@ -5,3 +5,6 @@ databaseChangeLog:
   - include:
       file: db.changelog-002-retry-count.yaml
       relativeToChangelogFile: true
+  - include:
+      file: db.changelog-003-id-default.yaml
+      relativeToChangelogFile: true

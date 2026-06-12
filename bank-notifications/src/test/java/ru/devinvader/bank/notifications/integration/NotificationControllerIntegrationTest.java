@@ -20,7 +20,7 @@ class NotificationControllerIntegrationTest extends BaseIntegrationTest {
         var requestBody = """
                 {
                     "type": "TRANSFER",
-                    "accountId": "user1",
+                    "accountId": "afd94176-3179-4285-9f6b-96fd9131628a",
                     "amount": 123.45,
                     "message": "блаблабла"
                 }
@@ -38,7 +38,7 @@ class NotificationControllerIntegrationTest extends BaseIntegrationTest {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody()).contains("SENT");
         assertThat(response.getBody()).contains("TRANSFER");
-        assertThat(response.getBody()).contains("user1");
+        assertThat(response.getBody()).contains("afd94176-3179-4285-9f6b-96fd9131628a");
     }
 
     @Test
@@ -46,7 +46,7 @@ class NotificationControllerIntegrationTest extends BaseIntegrationTest {
         var requestBody = """
                 {
                     "type": "TRANSFER",
-                    "accountId": "user1",
+                    "accountId": "afd94176-3179-4285-9f6b-96fd9131628a",
                     "amount": 123.45,
                     "message": "блаблабла"
                 }
@@ -66,7 +66,7 @@ class NotificationControllerIntegrationTest extends BaseIntegrationTest {
         var requestBody = """
                 {
                     "type": null,
-                    "accountId": "",
+                    "accountId": null,
                     "amount": -1,
                     "message": ""
                 }

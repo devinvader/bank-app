@@ -5,13 +5,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import ru.devinvader.bank.common.model.NotificationRequest;
+import ru.devinvader.bank.notifications.mapper.NotificationMapper;
 import ru.devinvader.bank.notifications.model.Notification;
-import ru.devinvader.bank.notifications.model.NotificationRequest;
+import ru.devinvader.bank.common.model.NotificationType;
 import ru.devinvader.bank.notifications.model.NotificationStatus;
-import ru.devinvader.bank.notifications.model.NotificationType;
 import ru.devinvader.bank.notifications.repository.NotificationRepository;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -28,12 +30,12 @@ class NotificationServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new LoggerNotificationService(repository);
+        service = new LoggerNotificationService(repository, new NotificationMapper());
     }
 
     @Test
     void send_validRequest_shouldSaveAndReturnSent() {
-        var request = new NotificationRequest(NotificationType.TRANSFER, "user",
+        var request = new NotificationRequest(NotificationType.TRANSFER, UUID.randomUUID(),
                 new BigDecimal("100.50"), "Test transfer");
 
         when(repository.save(any(Notification.class)))
@@ -52,7 +54,7 @@ class NotificationServiceTest {
         when(repository.save(any(Notification.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        var request = new NotificationRequest(NotificationType.DEPOSIT, "user",
+        var request = new NotificationRequest(NotificationType.DEPOSIT, UUID.randomUUID(),
                 new BigDecimal("50.00"), "депозит");
 
         var result = service.send(request);
@@ -62,25 +64,11 @@ class NotificationServiceTest {
     }
 
     @Test
-    void fallbackSend_whenCircuitBreakerOpen_shouldCreateFailed() {
-        var request = new NotificationRequest(NotificationType.WITHDRAWAL, "user",
-                new BigDecimal("200.00"), "тест");
-
-        when(repository.save(any(Notification.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-
-        var result = service.fallbackSend(request, new RuntimeException("Circuit Breaker Open"));
-
-        assertThat(result).isNotNull();
-        assertThat(result.status()).isEqualTo(NotificationStatus.FAILED);
-    }
-
-    @Test
     void send_whenRepositoryFails_shouldThrowException() {
         doThrow(new RuntimeException())
                 .when(repository).save(any(Notification.class));
 
-        var request = new NotificationRequest(NotificationType.TRANSFER, "user",
+        var request = new NotificationRequest(NotificationType.TRANSFER, UUID.randomUUID(),
                 new BigDecimal("100.00"), "Test");
 
         assertThatThrownBy(() -> service.send(request))

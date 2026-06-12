@@ -9,10 +9,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.devinvader.bank.notifications.config.SecurityConfig;
 import ru.devinvader.bank.notifications.config.TestSecurityConfig;
+import ru.devinvader.bank.common.model.NotificationRequest;
 import ru.devinvader.bank.notifications.model.Notification;
-import ru.devinvader.bank.notifications.model.NotificationRequest;
+import ru.devinvader.bank.common.model.NotificationType;
 import ru.devinvader.bank.notifications.model.NotificationStatus;
-import ru.devinvader.bank.notifications.model.NotificationType;
 import ru.devinvader.bank.notifications.service.NotificationService;
 
 import java.math.BigDecimal;
@@ -38,7 +38,7 @@ class NotificationControllerTest {
 
     @Test
     void createNotification_withValidJwtAndBody_shouldReturnOk() throws Exception {
-        var notification = new Notification(UUID.randomUUID(), NotificationType.TRANSFER, "user123",
+        var notification = new Notification(UUID.randomUUID(), NotificationType.TRANSFER, UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a"),
                 new BigDecimal("100.50"), "Test transfer", NotificationStatus.SENT, Instant.now(), Instant.now(), 0, null);
 
         when(notificationService.send(any(NotificationRequest.class))).thenReturn(notification);
@@ -50,7 +50,7 @@ class NotificationControllerTest {
                                 .content("""
                                         {
                                             "type": "TRANSFER",
-                                            "accountId": "user123",
+                                            "accountId": "afd94176-3179-4285-9f6b-96fd9131628a",
                                             "amount": 100.50,
                                             "message": "Test transfer"
                                         }
@@ -69,7 +69,7 @@ class NotificationControllerTest {
                         .content("""
                                 {
                                     "type": "TRANSFER",
-                                    "accountId": "user123",
+                                    "accountId": "afd94176-3179-4285-9f6b-96fd9131628a",
                                     "amount": 100.50,
                                     "message": "Test"
                                 }
@@ -85,7 +85,7 @@ class NotificationControllerTest {
                         .content("""
                                 {
                                     "type": null,
-                                    "accountId": "",
+                                    "accountId": null,
                                     "amount": -1,
                                     "message": ""
                                 }

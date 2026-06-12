@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-add-id-default
+      author: devinvader
+      changes:
+        - addDefaultValue:
+            tableName: notifications
+            columnName: id
+            defaultValueComputed: gen_random_uuid()

@@ -1,14 +1,10 @@
 spring:
+  config:
+    import: classpath:application-test-common.yaml
+  datasource:
+    hikari:
+      connection-init-sql: SET search_path TO notifications,public
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
-  cloud:
-    consul:
-      enabled: false
-      config:
-        enabled: false
-      discovery:
-        enabled: false
-
-resilience4j:
-  circuitbreaker:
-    enabled: false
+    default-schema: notifications
+    liquibase-schema: public

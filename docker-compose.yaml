@@ -11,9 +11,10 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/01-init-schemas.sql
     networks:
       - bank-network
-    healthcheck:
+    healthcheck: # случалось такое, что не работает из-за этого. Добавлю, хоть и по заданию вроде не надо
       test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
       interval: 10s
       timeout: 5s
@@ -32,17 +33,17 @@ services:
       timeout: 5s
       retries: 5
 
-  consul:
-    image: hashicorp/consul:1.15
-    container_name: bank-consul
+  zookeeper:
+    image: zookeeper:3.9
+    container_name: bank-zookeeper
     ports:
-      - "8500:8500"
-      - "8600:8600/udp"
-    command: agent -dev -client=0.0.0.0
+      - "2181:2181"
+    environment:
+      ZOO_4LW_COMMANDS_WHITELIST: "ruok"
     networks:
       - bank-network
     healthcheck:
-      test: ["CMD", "consul", "members"]
+      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -59,7 +60,7 @@ services:
       KC_DB_URL: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?currentSchema=keycloak
       KC_DB_USERNAME: ${DB_USERNAME}
       KC_DB_PASSWORD: ${DB_PASSWORD}
-      KC_HOSTNAME: keycloak
+      KC_HOSTNAME: http://localhost:8089
       KC_HTTP_PORT: ${KEYCLOAK_PORT}
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
@@ -70,6 +71,12 @@ services:
       - "${KEYCLOAK_PORT}:${KEYCLOAK_PORT}"
     networks:
       - bank-network
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/keycloak/${KEYCLOAK_PORT} && echo -e 'GET /realms/${KEYCLOAK_REALM}/.well-known/openid-configuration HTTP/1.0\\r\\nHost: keycloak\\r\\n\\r\\n' >&3 && cat <&3 | grep -q 'issuer'"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
 
   bank-accounts:
     build:
@@ -79,14 +86,19 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      consul:
+      zookeeper:
+        condition: service_healthy
+      keycloak:
         condition: service_healthy
     env_file: .env
     environment:
       SERVER_PORT: 8082
       DB_SCHEMA: accounts
-    ports:
-      - "8082:8082"
+      DB_HOST: postgres
+      ZK_CONNECT_STRING: zookeeper:2181
+      REDIS_HOST: redis
+      KEYCLOAK_CLIENT_SECRET: accounts-secret
+      IMPORT_DEMO_DATA: ${IMPORT_DEMO_DATA:-false}
     networks:
       - bank-network
 
@@ -98,14 +110,18 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      consul:
+      zookeeper:
+        condition: service_healthy
+      keycloak:
         condition: service_healthy
     env_file: .env
     environment:
       SERVER_PORT: 8083
       DB_SCHEMA: cash
-    ports:
-      - "8083:8083"
+      DB_HOST: postgres
+      ZK_CONNECT_STRING: zookeeper:2181
+      REDIS_HOST: redis
+      KEYCLOAK_CLIENT_SECRET: cash-secret
     networks:
       - bank-network
 
@@ -117,14 +133,18 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      consul:
+      zookeeper:
+        condition: service_healthy
+      keycloak:
         condition: service_healthy
     env_file: .env
     environment:
       SERVER_PORT: 8084
       DB_SCHEMA: transfer
-    ports:
-      - "8084:8084"
+      DB_HOST: postgres
+      ZK_CONNECT_STRING: zookeeper:2181
+      REDIS_HOST: redis
+      KEYCLOAK_CLIENT_SECRET: transfer-secret
     networks:
       - bank-network
 
@@ -136,14 +156,17 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      consul:
+      zookeeper:
+        condition: service_healthy
+      keycloak:
         condition: service_healthy
     env_file: .env
     environment:
       SERVER_PORT: 8085
       DB_SCHEMA: notifications
-    ports:
-      - "8085:8085"
+      DB_HOST: postgres
+      ZK_CONNECT_STRING: zookeeper:2181
+      REDIS_HOST: redis
     networks:
       - bank-network
 
@@ -155,14 +178,17 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      consul:
+      zookeeper:
+        condition: service_healthy
+      keycloak:
         condition: service_healthy
     env_file: .env
     environment:
       SERVER_PORT: 8081
       DB_SCHEMA: gateway
-    ports:
-      - "8081:8081"
+      DB_HOST: postgres
+      ZK_CONNECT_STRING: zookeeper:2181
+      REDIS_HOST: redis
     networks:
       - bank-network
 
@@ -176,11 +202,16 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      consul:
+      zookeeper:
+        condition: service_healthy
+      keycloak:
         condition: service_healthy
     env_file: .env
     environment:
       SERVER_PORT: 8080
+      DB_HOST: postgres
+      ZK_CONNECT_STRING: zookeeper:2181
+      REDIS_HOST: redis
     ports:
       - "8080:8080"
     networks:

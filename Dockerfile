@@ -8,6 +8,8 @@ COPY bank-cash/pom.xml bank-cash/
 COPY bank-transfer/pom.xml bank-transfer/
 COPY bank-notifications/pom.xml bank-notifications/
 COPY bank-gateway/pom.xml bank-gateway/
+COPY bank-common/pom.xml bank-common/
+COPY bank-common/src bank-common/src/
 COPY bank-front-ui/src bank-front-ui/src/
 COPY bank-accounts/src bank-accounts/src/
 COPY bank-cash/src bank-cash/src/
@@ -16,7 +18,7 @@ COPY bank-notifications/src bank-notifications/src/
 COPY bank-gateway/src bank-gateway/src/
 RUN mvn clean package -DskipTests
 
-# --- Runtime stages ---
+# --- Runtime stage ---
 
 FROM eclipse-temurin:21-jre-alpine AS bank-front-ui
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup

@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-seed-demo-accounts
+      author: devinvader
+      context: "true"
+      changes:
+        - sql:
+            sql: |
+              INSERT INTO accounts.accounts (id, name, birthdate, balance, created_at) VALUES
+              ('d2ae6469-71f8-4f22-acc1-eb847a1b766a', 'Иван Иванов', '1990-05-15', 50000.00, NOW()),
+              ('e8f5894a-7136-4031-b7c6-12bc0118c7a0', 'Петр Петров', '1985-11-03', 75000.00, NOW()),
+              ('9b40ab0f-bb4b-4a20-98ec-ac8ef8ea0d48', 'Сергей Тестов', '1992-08-20', 32000.00, NOW()),
+              ('7b8ec962-908d-4330-91b2-b9dbb3b2f9ed', 'Анна Латынова', '1988-02-14', 120000.00, NOW()),
+              ('e721b308-2004-4e23-9d1e-78cff0517c77', 'Дмитрий Романов', '1995-07-30', 15000.00, NOW()),
+              ('e708cacb-6da9-4dbb-a47f-9927543dcc80', 'Елена ДевИнвейдеров', '1991-12-01', 88000.00, NOW()),
+              ('9bf22b0a-e71f-4ca9-9763-e87ef1b5ea22', 'Михаил Малахов', '1987-04-18', 45000.00, NOW());

@@ -12,6 +12,7 @@
   "accessCodeLifespanLogin": 1800,
   "users": [
     {
+      "id": "d2ae6469-71f8-4f22-acc1-eb847a1b766a",
       "username": "user1",
       "email": "user1@bank.local",
       "firstName": "Иван",
@@ -20,11 +21,13 @@
       "credentials": [
         {
           "type": "password",
-          "value": "password"
+          "value": "password",
+          "temporary": false
         }
       ]
     },
     {
+      "id": "e8f5894a-7136-4031-b7c6-12bc0118c7a0",
       "username": "user2",
       "email": "user2@bank.local",
       "firstName": "Петр",
@@ -33,9 +36,265 @@
       "credentials": [
         {
           "type": "password",
-          "value": "password"
+          "value": "password",
+          "temporary": false
         }
       ]
+    },
+    {
+      "id": "9b40ab0f-bb4b-4a20-98ec-ac8ef8ea0d48",
+      "username": "user3",
+      "email": "user3@yandex.ru",
+      "firstName": "Сергей",
+      "lastName": "Тестов",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "7b8ec962-908d-4330-91b2-b9dbb3b2f9ed",
+      "username": "user4",
+      "email": "user4@yandex.ru",
+      "firstName": "Анна",
+      "lastName": "Латынова",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "e721b308-2004-4e23-9d1e-78cff0517c77",
+      "username": "user5",
+      "email": "user5@yandex.ru",
+      "firstName": "Дмитрий",
+      "lastName": "Романов",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "e708cacb-6da9-4dbb-a47f-9927543dcc80",
+      "username": "user6",
+      "email": "user6@yandex.ru",
+      "firstName": "Елена",
+      "lastName": "ДевИнвейдеров",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "9bf22b0a-e71f-4ca9-9763-e87ef1b5ea22",
+      "username": "user7",
+      "email": "user7@yandex.ru",
+      "firstName": "Михаил",
+      "lastName": "Малахов",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ]
+    }
+  ],
+  "clientScopes": [
+    {
+      "name": "openid",
+      "description": "OpenID Connect built-in scope",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "sub",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-sub-mapper",
+          "consentRequired": false,
+          "config": {
+            "introspection.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "audience resolve",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-resolve-mapper",
+          "consentRequired": false,
+          "config": {
+            "introspection.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "profile",
+      "description": "Profile built-in scope",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "username",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "username",
+            "claim.name": "preferred_username",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "given name",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "firstName",
+            "claim.name": "given_name",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "family name",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "lastName",
+            "claim.name": "family_name",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "email",
+      "description": "Email built-in scope",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "email",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "email",
+            "claim.name": "email",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "web-origins",
+      "description": "Web origins built-in scope",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      }
+    },
+    {
+      "name": "accounts:read",
+      "description": "Scope for reading account data",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "accounts_read_mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-hardcoded-claim-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "scope",
+            "claim.value": "accounts:read",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "lightweight.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "name": "accounts:write",
+      "description": "Scope for writing account data",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "notifications:send",
+      "description": "Scope for sending notifications",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "transfer:execute",
+      "description": "Scope for executing transfers",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
+    },
+    {
+      "name": "cash:operate",
+      "description": "Scope for cash operations",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      }
     }
   ],
   "clients": [
@@ -137,68 +396,6 @@
       "bearerOnly": true,
       "defaultClientScopes": [],
       "optionalClientScopes": []
-    }
-  ],
-  "clientScopes": [
-    {
-      "name": "accounts:read",
-      "description": "Scope for reading account data",
-      "protocol": "openid-connect",
-      "attributes": {
-        "include.in.token.scope": "true",
-        "display.on.consent.screen": "true"
-      },
-      "protocolMappers": [
-        {
-          "name": "accounts_read_mapper",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-hardcoded-claim-mapper",
-          "consentRequired": false,
-          "config": {
-            "claim.name": "scope",
-            "claim.value": "accounts:read",
-            "access.token.claim": "true",
-            "id.token.claim": "false",
-            "lightweight.claim": "false"
-          }
-        }
-      ]
-    },
-    {
-      "name": "accounts:write",
-      "description": "Scope for writing account data",
-      "protocol": "openid-connect",
-      "attributes": {
-        "include.in.token.scope": "true",
-        "display.on.consent.screen": "true"
-      }
-    },
-    {
-      "name": "notifications:send",
-      "description": "Scope for sending notifications",
-      "protocol": "openid-connect",
-      "attributes": {
-        "include.in.token.scope": "true",
-        "display.on.consent.screen": "true"
-      }
-    },
-    {
-      "name": "transfer:execute",
-      "description": "Scope for executing transfers",
-      "protocol": "openid-connect",
-      "attributes": {
-        "include.in.token.scope": "true",
-        "display.on.consent.screen": "true"
-      }
-    },
-    {
-      "name": "cash:operate",
-      "description": "Scope for cash operations",
-      "protocol": "openid-connect",
-      "attributes": {
-        "include.in.token.scope": "true",
-        "display.on.consent.screen": "true"
-      }
     }
   ]
 }

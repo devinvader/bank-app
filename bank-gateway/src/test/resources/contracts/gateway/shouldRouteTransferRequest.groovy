@@ -1,7 +1,7 @@
 import org.springframework.cloud.contract.spec.Contract
 
 Contract.make {
-    description("Request to /api/transfer should be routed when authenticated")
+    description("Маршрутизация запроса к transfer с авторизацией")
     request {
         method 'POST'
         url '/api/transfer'
@@ -10,7 +10,7 @@ Contract.make {
             header("Authorization", "Bearer test-token")
         }
         body([
-            toLogin: "user2",
+            toAccountId: "447129a6-bf9b-4dcd-9b35-36d192bb525a",
             amount: 50
         ])
     }

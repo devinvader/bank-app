@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 @TestConfiguration
 public class TestGatewayRoutes {
 
+    // порт должен не использоваться
     private static final String DOWNSTREAM = "http://localhost:54321";
 
     @Bean

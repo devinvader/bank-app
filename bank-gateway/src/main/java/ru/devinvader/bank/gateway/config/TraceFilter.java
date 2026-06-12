@@ -16,34 +16,33 @@ import reactor.core.publisher.Mono;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class TraceFilter implements GlobalFilter {
 
-    private static final String REQUEST_ID_HEADER = "X-Request-Id";
+    private static final String SPAN_ID_HEADER = "X-Span-Id";
     private static final String TRACE_ID_HEADER = "X-Trace-Id";
-    private static final String MDC_REQUEST_ID = "requestId";
+    private static final String MDC_SPAN_ID = "spanId";
     private static final String MDC_TRACE_ID = "traceId";
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         var request = exchange.getRequest();
-        var requestId = request.getHeaders().getOrEmpty(REQUEST_ID_HEADER)
-                .stream().findFirst().orElseGet(() -> UUID.randomUUID().toString());
         var traceId = request.getHeaders().getOrEmpty(TRACE_ID_HEADER)
                 .stream().findFirst().orElseGet(() -> UUID.randomUUID().toString());
+        var spanId = UUID.randomUUID().toString();
 
         var mutatedRequest = request.mutate()
-                .header(REQUEST_ID_HEADER, requestId)
+                .header(SPAN_ID_HEADER, spanId)
                 .header(TRACE_ID_HEADER, traceId)
                 .build();
 
         var response = exchange.getResponse();
-        response.getHeaders().add(REQUEST_ID_HEADER, requestId);
+        response.getHeaders().add(SPAN_ID_HEADER, spanId);
         response.getHeaders().add(TRACE_ID_HEADER, traceId);
 
         try {
-            MDC.put(MDC_REQUEST_ID, requestId);
+            MDC.put(MDC_SPAN_ID, spanId);
             MDC.put(MDC_TRACE_ID, traceId);
             return chain.filter(exchange.mutate().request(mutatedRequest).build());
         } finally {
-            MDC.remove(MDC_REQUEST_ID);
+            MDC.remove(MDC_SPAN_ID);
             MDC.remove(MDC_TRACE_ID);
         }
     }

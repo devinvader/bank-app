@@ -1,7 +1,7 @@
 import org.springframework.cloud.contract.spec.Contract
 
 Contract.make {
-    description("Request to /api/accounts/** should be routed when authenticated")
+    description("Маршрутизация запроса к accounts с авторизацией")
     request {
         method 'GET'
         url '/api/accounts/me'

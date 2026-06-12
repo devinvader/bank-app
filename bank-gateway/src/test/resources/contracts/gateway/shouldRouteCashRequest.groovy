@@ -1,7 +1,7 @@
 import org.springframework.cloud.contract.spec.Contract
 
 Contract.make {
-    description("Request to /api/cash/** should be routed when authenticated")
+    description("Маршрутизация запроса к cash с авторизацией")
     request {
         method 'POST'
         url '/api/cash/deposit'

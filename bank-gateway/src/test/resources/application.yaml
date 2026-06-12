@@ -1,39 +1,25 @@
 spring:
-  config:
-    import: ""
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.security.oauth2.client.reactive.ReactiveOAuth2ClientAutoConfiguration
-      - org.springframework.cloud.consul.ConsulAutoConfiguration
-      - org.springframework.cloud.consul.discovery.ConsulDiscoveryClientAutoConfiguration
-      - org.springframework.cloud.consul.config.ConsulConfigAutoConfiguration
-  application:
-    name: bank-gateway-test
+  main:
+    allow-bean-definition-overriding: true
+    web-application-type: reactive
   cloud:
-    consul:
+    zookeeper:
       enabled: false
-      config:
-        enabled: false
       discovery:
         enabled: false
+      config:
+        enabled: false
+  application:
+    name: bank-gateway-test
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8089/realms/bank
 
 resilience4j:
   circuitbreaker:
-    configs:
-      default:
-        sliding-window-size: 10
-        failure-rate-threshold: 50
-        wait-duration-in-open-state: 10s
-        permitted-number-of-calls-in-half-open-state: 3
-    instances:
-      accountsCircuitBreaker:
-        base-config: default
-      cashCircuitBreaker:
-        base-config: default
-      transferCircuitBreaker:
-        base-config: default
-      notificationsCircuitBreaker:
-        base-config: default
+    enabled: false
 
 management:
   endpoints:

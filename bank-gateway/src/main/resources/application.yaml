@@ -1,106 +1,49 @@
 spring:
   config:
-    import: "consul:"
+    import: "optional:zookeeper:"
   application:
     name: bank-gateway
   cloud:
-    consul:
+    zookeeper:
+      connect-string: ${ZK_CONNECT_STRING:localhost:2181}
       discovery:
         instance-id: ${spring.application.name}:${server.port}
-      host: ${CONSUL_HOST:localhost}
-      port: ${CONSUL_PORT:8500}
     gateway:
       discovery:
         locator:
-          enabled: true
-          lower-case-service-id: true
-      default-filters:
+          enabled: false
+      default-filters: # SO
         - DedupeResponseHeader=Access-Control-Allow-Origin
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOrigins: "*"
-            allowedMethods: "*"
+            allowedOrigins: "${FRONT_UI_ORIGIN:http://bank-front-ui:8080}"
+            allowedMethods: "GET,POST,PUT,DELETE"
             allowedHeaders: "*"
       httpclient:
         connect-timeout: 2000
         response-timeout: 10s
-      routes:
-        - id: accounts
-          uri: lb://bank-accounts
-          predicates:
-            - Path=/api/accounts/**
-          filters:
-            - name: CircuitBreaker
-              args:
-                name: accountsCircuitBreaker
-                fallbackUri: forward:/fallback/accounts
-            - name: Retry
-              args:
-                retries: 3
-                statuses: BAD_GATEWAY, GATEWAY_TIMEOUT, SERVICE_UNAVAILABLE
-                backoff:
-                  firstBackoff: 50ms
-                  maxBackoff: 500ms
-                  factor: 2
-        - id: cash
-          uri: lb://bank-cash
-          predicates:
-            - Path=/api/cash/**
-          filters:
-            - name: CircuitBreaker
-              args:
-                name: cashCircuitBreaker
-                fallbackUri: forward:/fallback/cash
-            - name: Retry
-              args:
-                retries: 3
-                statuses: BAD_GATEWAY, GATEWAY_TIMEOUT, SERVICE_UNAVAILABLE
-                backoff:
-                  firstBackoff: 50ms
-                  maxBackoff: 500ms
-                  factor: 2
-        - id: transfer
-          uri: lb://bank-transfer
-          predicates:
-            - Path=/api/transfer/**
-          filters:
-            - name: CircuitBreaker
-              args:
-                name: transferCircuitBreaker
-                fallbackUri: forward:/fallback/transfer
-            - name: Retry
-              args:
-                retries: 3
-                statuses: BAD_GATEWAY, GATEWAY_TIMEOUT, SERVICE_UNAVAILABLE
-                backoff:
-                  firstBackoff: 50ms
-                  maxBackoff: 500ms
-                  factor: 2
-        - id: notifications
-          uri: lb://bank-notifications
-          predicates:
-            - Path=/api/notifications/**
-          filters:
-            - name: CircuitBreaker
-              args:
-                name: notificationsCircuitBreaker
-                fallbackUri: forward:/fallback/notifications
-            - name: Retry
-              args:
-                retries: 3
-                statuses: BAD_GATEWAY, GATEWAY_TIMEOUT, SERVICE_UNAVAILABLE
-                backoff:
-                  firstBackoff: 50ms
-                  maxBackoff: 500ms
-                  factor: 2
+
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://${KEYCLOAK_HOST:localhost}:${KEYCLOAK_PORT:8089}/realms/${KEYCLOAK_REALM:bank}
+          jwk-set-uri: http://${KEYCLOAK_HOST:keycloak}:${KEYCLOAK_PORT:8089}/realms/${KEYCLOAK_REALM:bank}/protocol/openid-connect/certs
 
 resilience4j:
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 60s
+    instances:
+      accountsCircuitBreaker:
+        base-config: default
+      cashCircuitBreaker:
+        base-config: default
+      transferCircuitBreaker:
+        base-config: default
+      notificationsCircuitBreaker:
+        base-config: default
   circuitbreaker:
     configs:
       default:
@@ -119,6 +62,9 @@ resilience4j:
         base-config: default
 
 management:
+  endpoint:
+    gateway:
+      enabled: true
   endpoints:
     web:
       exposure:

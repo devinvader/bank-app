@@ -167,7 +167,7 @@ class AccountControllerTest {
                                     "amount": 100
                                 }
                                 """))
-                .andExpect(status().isUnprocessableEntity());
+                .andExpect(status().isUnprocessableContent());
     }
 
     @Test

@@ -37,27 +37,28 @@ class AccountRepositoryConcurrencyTest extends BaseIntegrationTest {
         var threads = 5;
         var amountPerThread = BigDecimal.valueOf(300);
         var latch = new CountDownLatch(threads);
-        var executor = Executors.newFixedThreadPool(threads);
+        try (var executor = Executors.newFixedThreadPool(threads)) {
 
-        for (int i = 0; i < threads; i++) {
-            executor.submit(() -> {
-                try {
-                    var current = accountRepository.findById(accountId).orElseThrow();
-                    if (current.balance().compareTo(amountPerThread) >= 0) {
-                        var updated = current.toBuilder()
-                                .balance(current.balance().subtract(amountPerThread))
-                                .updatedAt(Instant.now())
-                                .build();
-                        accountRepository.save(updated);
+            for (int i = 0; i < threads; i++) {
+                executor.submit(() -> {
+                    try {
+                        var current = accountRepository.findById(accountId).orElseThrow();
+                        if (current.balance().compareTo(amountPerThread) >= 0) {
+                            var updated = current.toBuilder()
+                                    .balance(current.balance().subtract(amountPerThread))
+                                    .updatedAt(Instant.now())
+                                    .build();
+                            accountRepository.save(updated);
+                        }
+                    } finally {
+                        latch.countDown();
                     }
-                } finally {
-                    latch.countDown();
-                }
-            });
-        }
+                });
+            }
 
-        latch.await();
-        executor.shutdown();
+            latch.await();
+            executor.shutdown();
+        }
 
         var finalAccount = accountRepository.findById(accountId).orElseThrow();
         assertThat(finalAccount.balance()).isGreaterThanOrEqualTo(BigDecimal.ZERO);

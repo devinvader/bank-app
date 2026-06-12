@@ -83,7 +83,7 @@ class ContractTest {
                                 {"accountId":"afd94176-3179-4285-9f6b-96fd9131628a","newBalance":1100.00,"type":"DEPOSIT","amount":100.00}
                                 """)));
 
-        var result = bankApiClient.deposit(UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a"), BigDecimal.valueOf(100));
+        var result = bankApiClient.deposit(BigDecimal.valueOf(100));
 
         assertThat(result.newBalance()).isEqualByComparingTo(BigDecimal.valueOf(1100));
     }
@@ -97,7 +97,7 @@ class ContractTest {
                                 {"accountId":"afd94176-3179-4285-9f6b-96fd9131628a","newBalance":900.00,"type":"WITHDRAWAL","amount":100.00}
                                 """)));
 
-        var result = bankApiClient.withdraw(UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a"), BigDecimal.valueOf(100));
+        var result = bankApiClient.withdraw(BigDecimal.valueOf(100));
 
         assertThat(result.newBalance()).isEqualByComparingTo(BigDecimal.valueOf(900));
     }

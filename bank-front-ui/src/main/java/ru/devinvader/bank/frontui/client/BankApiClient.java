@@ -70,12 +70,12 @@ public class BankApiClient {
     }
 
     @CircuitBreaker(name = "cashGateway", fallbackMethod = "fallbackCash")
-    public CashResponse deposit(UUID accountId, BigDecimal amount) {
+    public CashResponse deposit(BigDecimal amount) {
         return executeCashOperation(frontUiMapper.toCashRequest(amount), "deposit");
     }
 
     @CircuitBreaker(name = "cashGateway", fallbackMethod = "fallbackCash")
-    public CashResponse withdraw(UUID accountId, BigDecimal amount) {
+    public CashResponse withdraw(BigDecimal amount) {
         return executeCashOperation(frontUiMapper.toCashRequest(amount), "withdraw");
     }
 

@@ -27,10 +27,10 @@ public class CashFrontServiceImpl implements CashFrontService {
         try {
             var accountId = UUID.fromString(tokenProvider.getUsername());
             if (action == CashAction.DEPOSIT) {
-                bankApiClient.deposit(accountId, amount);
+                bankApiClient.deposit(amount);
                 return getCurrentPage().withInfo("Положено " + amount + " руб");
             } else {
-                bankApiClient.withdraw(accountId, amount);
+                bankApiClient.withdraw(amount);
                 return getCurrentPage().withInfo("Снято " + amount + " руб");
             }
         } catch (InsufficientFundsException e) {

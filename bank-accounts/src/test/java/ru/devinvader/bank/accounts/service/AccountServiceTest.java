@@ -135,7 +135,7 @@ class AccountServiceTest {
         var result = service.getTransferTargets(id1);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).accountId()).isEqualTo(id2);
+        assertThat(result.getFirst().accountId()).isEqualTo(id2);
     }
 
     private static Account account(UUID id, String name, BigDecimal balance) {

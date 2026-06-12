@@ -30,8 +30,8 @@ class CashServiceIntegrationTest extends BaseIntegrationTest {
 
         var operations = cashRepository.findByAccountId(UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a"));
         assertThat(operations).hasSize(1);
-        assertThat(operations.get(0).type()).isEqualTo(CashOperationType.DEPOSIT);
-        assertThat(operations.get(0).amount()).isEqualByComparingTo(BigDecimal.valueOf(100));
+        assertThat(operations.getFirst().type()).isEqualTo(CashOperationType.DEPOSIT);
+        assertThat(operations.getFirst().amount()).isEqualByComparingTo(BigDecimal.valueOf(100));
     }
 
     @Test

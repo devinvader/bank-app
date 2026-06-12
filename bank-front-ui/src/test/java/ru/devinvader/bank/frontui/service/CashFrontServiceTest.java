@@ -25,7 +25,6 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
@@ -73,7 +72,7 @@ class CashFrontServiceTest {
     @Test
     void withdraw_insufficientFunds_shouldReturnError() {
         doThrow(new InsufficientFundsException("Недостаточно средств на счету"))
-                .when(bankApiClient).withdraw(any(UUID.class), any(BigDecimal.class));
+                .when(bankApiClient).withdraw(any(BigDecimal.class));
 
         var page = cashFrontService.processCashOperation(BigDecimal.valueOf(99999), CashAction.WITHDRAW);
 
@@ -90,7 +89,7 @@ class CashFrontServiceTest {
     @Test
     void processOperation_serviceUnavailable_shouldReturnError() {
         doThrow(new ServiceUnavailableException("Service down"))
-                .when(bankApiClient).deposit(any(UUID.class), any(BigDecimal.class));
+                .when(bankApiClient).deposit(any(BigDecimal.class));
 
         var page = cashFrontService.processCashOperation(BigDecimal.TEN, CashAction.DEPOSIT);
 

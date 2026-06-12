@@ -54,7 +54,7 @@ class AccountRepositoryTest extends BaseIntegrationTest {
         var result = accountRepository.findAllByIdNot(id1);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).id()).isEqualTo(id2);
+        assertThat(result.getFirst().id()).isEqualTo(id2);
     }
 
     @Test

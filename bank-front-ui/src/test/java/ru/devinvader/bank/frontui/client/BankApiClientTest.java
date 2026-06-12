@@ -80,7 +80,7 @@ class BankApiClientTest {
                         {"accountId":"afd94176-3179-4285-9f6b-96fd9131628a","newBalance":1100,"type":"DEPOSIT","amount":100}
                         """, MediaType.APPLICATION_JSON));
 
-        var result = bankApiClient.deposit(UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a"), BigDecimal.valueOf(100));
+        var result = bankApiClient.deposit(BigDecimal.valueOf(100));
 
         assertThat(result.newBalance()).isEqualByComparingTo(BigDecimal.valueOf(1100));
     }
@@ -91,7 +91,7 @@ class BankApiClientTest {
                 .andExpect(method(org.springframework.http.HttpMethod.POST))
                 .andRespond(withBadRequest().body("Insufficient balance").contentType(MediaType.TEXT_PLAIN));
 
-        assertThatThrownBy(() -> bankApiClient.withdraw(UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a"), BigDecimal.valueOf(99999)))
+        assertThatThrownBy(() -> bankApiClient.withdraw(BigDecimal.valueOf(99999)))
                 .isInstanceOf(InsufficientFundsException.class);
     }
 

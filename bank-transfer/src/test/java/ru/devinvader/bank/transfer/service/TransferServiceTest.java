@@ -65,6 +65,6 @@ class TransferServiceTest {
         var history = service.getHistory(UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a"));
 
         assertThat(history).hasSize(1);
-        assertThat(history.get(0).fromAccountId()).isEqualTo(UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a"));
+        assertThat(history.getFirst().fromAccountId()).isEqualTo(UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a"));
     }
 }

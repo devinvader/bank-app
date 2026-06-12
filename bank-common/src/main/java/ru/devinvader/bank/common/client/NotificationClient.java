@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import ru.devinvader.bank.common.mapper.NotificationRequestMapper;
-import ru.devinvader.bank.common.model.NotificationRequest;
 import ru.devinvader.bank.common.model.NotificationType;
 
 import java.math.BigDecimal;

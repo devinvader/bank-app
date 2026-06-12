@@ -111,8 +111,6 @@ class AccountFrontServiceTest {
 
         var page = accountFrontService.updateAccount("Иван", LocalDate.of(1990, 1, 1));
 
-        assertThat(page.errors()).satisfies(errors -> {
-            assertThat(errors).anyMatch(e -> e.contains("Некорректные данные"));
-        });
+        assertThat(page.errors()).satisfies(errors -> assertThat(errors).anyMatch(e -> e.contains("Некорректные данные")));
     }
 }

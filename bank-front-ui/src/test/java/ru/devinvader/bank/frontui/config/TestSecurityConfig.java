@@ -61,7 +61,7 @@ public class TestSecurityConfig {
 
     @Bean
     @Primary
-    public TokenProvider tokenProvider(OAuth2AuthorizedClientService authorizedClientService) {
+    public TokenProvider tokenProvider() {
         var provider = Mockito.mock(TokenProvider.class);
         when(provider.getAccessToken()).thenReturn("test-token");
         when(provider.getUsername()).thenReturn(JwtTestUtils.TEST_SUBJECT);

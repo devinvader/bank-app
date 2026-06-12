@@ -1,18 +1,20 @@
 package ru.devinvader.bank.accounts.service;
 
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.devinvader.bank.accounts.client.NotificationClient;
 import ru.devinvader.bank.accounts.exception.AccountNotFoundException;
 import ru.devinvader.bank.accounts.exception.AgeValidationException;
 import ru.devinvader.bank.accounts.exception.InsufficientBalanceException;
+import ru.devinvader.bank.accounts.mapper.AccountMapper;
 import ru.devinvader.bank.accounts.model.Account;
 import ru.devinvader.bank.accounts.model.AccountRequest;
 import ru.devinvader.bank.accounts.model.AccountResponse;
 import ru.devinvader.bank.accounts.repository.AccountRepository;
+import ru.devinvader.bank.common.client.NotificationClient;
+import ru.devinvader.bank.common.model.NotificationMessages;
+import ru.devinvader.bank.common.model.NotificationType;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -27,61 +29,49 @@ import java.util.UUID;
 public class AccountServiceImpl implements AccountService {
     private final AccountRepository repository;
     private final NotificationClient notificationClient;
+    private final NotificationMessages notificationMessages;
+    private final AccountMapper accountMapper;
 
     @Override
-    @CircuitBreaker(name = "accountService", fallbackMethod = "fallbackGetByLogin")
-    public AccountResponse getByLogin(String login) {
-        var account = repository.findByLogin(login)
-                .orElseThrow(() -> new AccountNotFoundException(login));
-        return toResponse(account);
-    }
-
-    public AccountResponse fallbackGetByLogin(String login, Throwable t) {
-        log.error("Fallback getByLogin for {}: {}", login, t.getMessage());
-        throw new RuntimeException("Service temporarily unavailable");
+    public AccountResponse getById(UUID accountId) {
+        var account = repository.findById(accountId)
+                .orElseGet(() -> createDefaultAccount(accountId));
+        return accountMapper.toResponse(account);
     }
 
     @Override
-    @CircuitBreaker(name = "accountService", fallbackMethod = "fallbackGetTransferTargets")
-    public List<AccountResponse> getTransferTargets(String excludeLogin) {
-        return repository.findAllByLoginNot(excludeLogin).stream()
-                .map(this::toResponse)
+    public List<AccountResponse> getTransferTargets(UUID excludeAccountId) {
+        return repository.findAllByIdNot(excludeAccountId).stream()
+                .map(accountMapper::toResponse)
                 .toList();
-    }
-
-    public List<AccountResponse> fallbackGetTransferTargets(String excludeLogin, Throwable t) {
-        log.error("Fallback getTransferTargets for {}: {}", excludeLogin, t.getMessage());
-        return List.of();
     }
 
     @Override
     @Transactional
-    @CircuitBreaker(name = "accountService", fallbackMethod = "fallbackUpdate")
-    public AccountResponse update(String login, AccountRequest request) {
+    public AccountResponse update(UUID accountId, AccountRequest request) {
         validateAge(request.birthdate());
-        var account = repository.findByLogin(login)
-                .orElseThrow(() -> new AccountNotFoundException(login));
+        var account = repository.findById(accountId)
+                .orElseGet(() -> createDefaultAccount(accountId));
         account = account.toBuilder()
                 .name(request.name())
                 .birthdate(request.birthdate())
                 .updatedAt(Instant.now())
                 .build();
-        var result = toResponse(repository.save(account));
-        notificationClient.send("PROFILE_UPDATE", login, BigDecimal.ZERO, "Profile updated for " + login);
+        var result = accountMapper.toResponse(repository.save(account));
+        try {
+            notificationClient.send(NotificationType.PROFILE_UPDATE, accountId, BigDecimal.ZERO,
+                    notificationMessages.forProfileUpdate(accountId));
+        } catch (Exception e) {
+            log.error("Failed to send notification: {}", e.getMessage());
+        }
         return result;
-    }
-
-    public AccountResponse fallbackUpdate(String login, AccountRequest request, Throwable t) {
-        log.error("Fallback update for {}: {}", login, t.getMessage());
-        throw new RuntimeException("Service temporarily unavailable");
     }
 
     @Override
     @Transactional
-    @CircuitBreaker(name = "accountService", fallbackMethod = "fallbackDebit")
-    public void debit(String login, BigDecimal amount) {
-        var account = repository.findByLogin(login)
-                .orElseThrow(() -> new AccountNotFoundException(login));
+    public void debit(UUID accountId, BigDecimal amount) {
+        var account = repository.findById(accountId)
+                .orElseThrow(() -> new AccountNotFoundException(accountId));
         if (account.balance().compareTo(amount) < 0) {
             throw new InsufficientBalanceException(amount, account.balance());
         }
@@ -90,31 +80,22 @@ public class AccountServiceImpl implements AccountService {
                 .updatedAt(Instant.now())
                 .build();
         repository.save(account);
-        notificationClient.send("WITHDRAWAL", login, amount, "Debited " + amount + " from " + login);
-    }
-
-    public void fallbackDebit(String login, BigDecimal amount, Throwable t) {
-        log.error("Fallback debit for {} amount {}: {}", login, amount, t.getMessage());
-        throw new RuntimeException("Service temporarily unavailable");
+        notificationClient.send(NotificationType.WITHDRAWAL, accountId, amount,
+                notificationMessages.forWithdrawal(accountId, amount));
     }
 
     @Override
     @Transactional
-    @CircuitBreaker(name = "accountService", fallbackMethod = "fallbackCredit")
-    public void credit(String login, BigDecimal amount) {
-        var account = repository.findByLogin(login)
-                .orElseThrow(() -> new AccountNotFoundException(login));
+    public void credit(UUID accountId, BigDecimal amount) {
+        var account = repository.findById(accountId)
+                .orElseThrow(() -> new AccountNotFoundException(accountId));
         account = account.toBuilder()
                 .balance(account.balance().add(amount))
                 .updatedAt(Instant.now())
                 .build();
         repository.save(account);
-        notificationClient.send("DEPOSIT", login, amount, "Credited " + amount + " to " + login);
-    }
-
-    public void fallbackCredit(String login, BigDecimal amount, Throwable t) {
-        log.error("Fallback credit for {} amount {}: {}", login, amount, t.getMessage());
-        throw new RuntimeException("Service temporarily unavailable");
+        notificationClient.send(NotificationType.DEPOSIT, accountId, amount,
+                notificationMessages.forDeposit(accountId, amount));
     }
 
     private void validateAge(LocalDate birthdate) {
@@ -123,7 +104,16 @@ public class AccountServiceImpl implements AccountService {
         }
     }
 
-    private AccountResponse toResponse(Account account) {
-        return new AccountResponse(account.login(), account.name(), account.birthdate(), account.balance());
+    private Account createDefaultAccount(UUID accountId) {
+        var account = Account.builder()
+                .id(accountId)
+                .name("Новый пользователь")
+                .birthdate(LocalDate.of(2000, 1, 1))
+                .balance(BigDecimal.ZERO)
+                .createdAt(Instant.now())
+                .newEntity(true)
+                .build();
+        log.info("Auto-created account for new user: {}", accountId);
+        return repository.save(account);
     }
 }

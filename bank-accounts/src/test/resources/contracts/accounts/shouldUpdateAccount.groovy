@@ -20,7 +20,7 @@ Contract.make {
             contentType(applicationJson())
         }
         body([
-            login: "user1",
+            accountId: "afd94176-3179-4285-9f6b-96fd9131628a",
             name: "Новое Имя",
             birthdate: "1990-01-01",
             balance: $(anyNumber())

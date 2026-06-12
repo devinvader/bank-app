@@ -20,21 +20,16 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/api/accounts/{login}/debit")
+                        .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/accounts/{accountId}/credit", "/api/accounts/{accountId}/debit")
                         .hasAuthority("SCOPE_accounts:write")
-                        .requestMatchers(HttpMethod.POST, "/api/accounts/{login}/credit")
-                        .hasAuthority("SCOPE_accounts:write")
-                        .requestMatchers(HttpMethod.GET, "/api/accounts/me")
-                        .hasAuthority("SCOPE_accounts:read")
                         .requestMatchers(HttpMethod.PUT, "/api/accounts/me")
                         .hasAuthority("SCOPE_accounts:write")
-                        .requestMatchers(HttpMethod.GET, "/api/accounts/transfer-targets")
-                        .hasAuthority("SCOPE_accounts:read")
-                        .requestMatchers(HttpMethod.GET, "/api/accounts/{login}")
-                        .hasAuthority("SCOPE_accounts:read")
-                        .requestMatchers(HttpMethod.PUT, "/api/accounts/me")
-                        .hasAuthority("SCOPE_accounts:write")
-                        .requestMatchers(HttpMethod.GET, "/api/accounts/transfer-targets")
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/accounts/me", "/api/accounts/{accountId}", "/api/accounts/transfer-targets")
                         .hasAuthority("SCOPE_accounts:read")
                         .anyRequest().authenticated()
                 )

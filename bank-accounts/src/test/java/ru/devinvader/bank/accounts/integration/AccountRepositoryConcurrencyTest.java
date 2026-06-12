@@ -13,7 +13,7 @@ import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class AccountConcurrencyTest extends BaseIntegrationTest {
+class AccountRepositoryConcurrencyTest extends BaseIntegrationTest {
 
     @BeforeEach
     void setUp() {
@@ -22,14 +22,15 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
 
     @Test
     void concurrentDebit_shouldMaintainConsistency() throws Exception {
+        UUID accountId = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
         var account = Account.builder()
-                .id(null)
-                .login("user1")
+                .id(accountId)
                 .name("Test User")
                 .birthdate(LocalDate.of(1990, 1, 1))
                 .balance(BigDecimal.valueOf(1000))
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
+                .newEntity(true)
                 .build();
         accountRepository.save(account);
 
@@ -41,7 +42,7 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
         for (int i = 0; i < threads; i++) {
             executor.submit(() -> {
                 try {
-                    var current = accountRepository.findByLogin("user1").orElseThrow();
+                    var current = accountRepository.findById(accountId).orElseThrow();
                     if (current.balance().compareTo(amountPerThread) >= 0) {
                         var updated = current.toBuilder()
                                 .balance(current.balance().subtract(amountPerThread))
@@ -58,7 +59,7 @@ class AccountConcurrencyTest extends BaseIntegrationTest {
         latch.await();
         executor.shutdown();
 
-        var finalAccount = accountRepository.findByLogin("user1").orElseThrow();
+        var finalAccount = accountRepository.findById(accountId).orElseThrow();
         assertThat(finalAccount.balance()).isGreaterThanOrEqualTo(BigDecimal.ZERO);
     }
 }

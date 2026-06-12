@@ -21,9 +21,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InsufficientBalanceException.class)
     public ResponseEntity<ProblemDetail> handleInsufficientBalance(InsufficientBalanceException ex) {
-        var problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
+        var problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage());
         problem.setTitle("Insufficient balance");
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(problem);
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body(problem);
     }
 
     @ExceptionHandler(AgeValidationException.class)

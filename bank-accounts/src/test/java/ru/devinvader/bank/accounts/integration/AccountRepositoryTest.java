@@ -7,6 +7,7 @@ import ru.devinvader.bank.accounts.model.Account;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -18,66 +19,70 @@ class AccountRepositoryTest extends BaseIntegrationTest {
     }
 
     @Test
-    void saveAndFindByLogin_shouldPersist() {
+    void saveAndFindById_shouldPersist() {
+        var id = UUID.randomUUID();
         var account = Account.builder()
-                .id(null)
-                .login("testuser")
+                .id(id)
                 .name("Test User")
                 .birthdate(LocalDate.of(1990, 1, 1))
                 .balance(BigDecimal.valueOf(1000))
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
+                .newEntity(true)
                 .build();
 
         accountRepository.save(account);
 
-        var found = accountRepository.findByLogin("testuser");
+        var found = accountRepository.findById(id);
         assertThat(found).isPresent();
-        assertThat(found.get().login()).isEqualTo("testuser");
+        assertThat(found.get().id()).isEqualTo(id);
     }
 
     @Test
-    void findByLogin_notFound_shouldReturnEmpty() {
-        var found = accountRepository.findByLogin("nonexistent");
+    void findById_notFound_shouldReturnEmpty() {
+        var found = accountRepository.findById(UUID.randomUUID());
         assertThat(found).isEmpty();
     }
 
     @Test
-    void findAllByLoginNot_shouldExclude() {
-        accountRepository.save(account("user1", "User One"));
-        accountRepository.save(account("user2", "User Two"));
+    void findAllByIdNot_shouldExclude() {
+        var id1 = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
+        var id2 = UUID.fromString("447129a6-bf9b-4dcd-9b35-36d192bb525a");
+        accountRepository.save(account(id1, "User One"));
+        accountRepository.save(account(id2, "User Two"));
 
-        var result = accountRepository.findAllByLoginNot("user1");
+        var result = accountRepository.findAllByIdNot(id1);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).login()).isEqualTo("user2");
+        assertThat(result.get(0).id()).isEqualTo(id2);
     }
 
     @Test
     void update_shouldPersistChanges() {
-        accountRepository.save(account("user1", "Old Name"));
+        var id = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
+        accountRepository.save(account(id, "Old Name"));
 
-        var found = accountRepository.findByLogin("user1").orElseThrow();
+        var found = accountRepository.findById(id).orElseThrow();
         var updated = found.toBuilder()
                 .name("New Name")
                 .updatedAt(Instant.now())
                 .build();
         accountRepository.save(updated);
 
-        var refetched = accountRepository.findByLogin("user1");
+        var refetched = accountRepository.findById(id);
         assertThat(refetched).isPresent();
         assertThat(refetched.get().name()).isEqualTo("New Name");
     }
 
-    private static Account account(String login, String name) {
+    private static Account account(UUID id, String name) {
         return Account.builder()
-                .id(null)
-                .login(login)
+                .id(id)
                 .name(name)
                 .birthdate(LocalDate.of(1990, 1, 1))
                 .balance(BigDecimal.ZERO)
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
+                .newEntity(true)
                 .build();
     }
 }

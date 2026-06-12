@@ -5,8 +5,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ru.devinvader.bank.accounts.client.NotificationClient;
-import ru.devinvader.bank.accounts.exception.AccountNotFoundException;
+import ru.devinvader.bank.accounts.mapper.AccountMapper;
+import org.springframework.context.support.ResourceBundleMessageSource;
+import ru.devinvader.bank.common.client.NotificationClient;
+import ru.devinvader.bank.common.model.NotificationMessages;
 import ru.devinvader.bank.accounts.exception.AgeValidationException;
 import ru.devinvader.bank.accounts.exception.InsufficientBalanceException;
 import ru.devinvader.bank.accounts.model.Account;
@@ -38,91 +40,107 @@ class AccountServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new AccountServiceImpl(repository, notificationClient);
+        var messageSource = new ResourceBundleMessageSource();
+        messageSource.setBasename("notification-messages");
+        messageSource.setDefaultEncoding("UTF-8");
+        service = new AccountServiceImpl(repository, notificationClient,
+                new NotificationMessages(messageSource), new AccountMapper());
     }
 
     @Test
-    void getByLogin_existingLogin_shouldReturnAccount() {
-        var account = account("user1", "Иван Иванов", BigDecimal.valueOf(1000));
-        when(repository.findByLogin("user1")).thenReturn(Optional.of(account));
+    void getById_existingId_shouldReturnAccount() {
+        UUID id = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
+        var account = account(id, "Иван Иванов", BigDecimal.valueOf(1000));
+        when(repository.findById(id)).thenReturn(Optional.of(account));
 
-        var result = service.getByLogin("user1");
+        var result = service.getById(id);
 
         assertThat(result).isNotNull();
-        assertThat(result.login()).isEqualTo("user1");
+        assertThat(result.accountId()).isEqualTo(id);
         assertThat(result.balance()).isEqualTo(BigDecimal.valueOf(1000));
     }
 
     @Test
-    void getByLogin_nonExistingLogin_shouldThrow() {
-        when(repository.findByLogin("nonexistent")).thenReturn(Optional.empty());
+    void getById_nonExistingId_shouldCreateDefault() {
+        UUID id = UUID.randomUUID();
+        when(repository.findById(id)).thenReturn(Optional.empty());
+        when(repository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        assertThatThrownBy(() -> service.getByLogin("nonexistent"))
-                .isInstanceOf(AccountNotFoundException.class);
+        var result = service.getById(id);
+
+        assertThat(result).isNotNull();
+        assertThat(result.accountId()).isEqualTo(id);
+        assertThat(result.name()).isEqualTo("Новый пользователь");
+        assertThat(result.balance()).isEqualByComparingTo(BigDecimal.ZERO);
     }
 
     @Test
     void debit_sufficientBalance_shouldDecreaseBalance() {
-        var account = account("user1", "Иван", BigDecimal.valueOf(1000));
-        when(repository.findByLogin("user1")).thenReturn(Optional.of(account));
+        UUID id = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
+        var account = account(id, "Иван", BigDecimal.valueOf(1000));
+        when(repository.findById(id)).thenReturn(Optional.of(account));
         when(repository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        service.debit("user1", BigDecimal.valueOf(300));
+        service.debit(id, BigDecimal.valueOf(300));
     }
 
     @Test
     void debit_insufficientBalance_shouldThrow() {
-        var account = account("user1", "Иван", BigDecimal.valueOf(100));
-        when(repository.findByLogin("user1")).thenReturn(Optional.of(account));
+        UUID id = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
+        var account = account(id, "Иван", BigDecimal.valueOf(100));
+        when(repository.findById(id)).thenReturn(Optional.of(account));
 
-        assertThatThrownBy(() -> service.debit("user1", BigDecimal.valueOf(500)))
+        assertThatThrownBy(() -> service.debit(id, BigDecimal.valueOf(500)))
                 .isInstanceOf(InsufficientBalanceException.class);
     }
 
     @Test
     void credit_shouldIncreaseBalance() {
-        var account = account("user1", "Иван", BigDecimal.valueOf(500));
-        when(repository.findByLogin("user1")).thenReturn(Optional.of(account));
+        UUID id = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
+        var account = account(id, "Иван", BigDecimal.valueOf(500));
+        when(repository.findById(id)).thenReturn(Optional.of(account));
         when(repository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        service.credit("user1", BigDecimal.valueOf(200));
+        service.credit(id, BigDecimal.valueOf(200));
     }
 
     @Test
     void update_validRequest_shouldUpdateNameAndBirthdate() {
-        var account = account("user1", "Старое Имя", BigDecimal.valueOf(100));
-        when(repository.findByLogin("user1")).thenReturn(Optional.of(account));
+        UUID id = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
+        var account = account(id, "Старое Имя", BigDecimal.valueOf(100));
+        when(repository.findById(id)).thenReturn(Optional.of(account));
         when(repository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
 
         var request = new AccountRequest("Новое Имя", LocalDate.of(1990, 1, 1));
-        var result = service.update("user1", request);
+        var result = service.update(id, request);
 
         assertThat(result.name()).isEqualTo("Новое Имя");
     }
 
     @Test
     void update_ageUnder18_shouldThrow() {
+        UUID id = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
         var request = new AccountRequest("Иван", LocalDate.now().minusYears(17));
-        assertThatThrownBy(() -> service.update("user1", request))
+        assertThatThrownBy(() -> service.update(id, request))
                 .isInstanceOf(AgeValidationException.class);
     }
 
     @Test
     void getTransferTargets_shouldExcludeCurrentUser() {
-        var acc1 = account("user1", "User One", BigDecimal.ZERO);
-        var acc2 = account("user2", "User Two", BigDecimal.ZERO);
-        when(repository.findAllByLoginNot("user1")).thenReturn(List.of(acc2));
+        UUID id1 = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
+        UUID id2 = UUID.fromString("447129a6-bf9b-4dcd-9b35-36d192bb525a");
+        var acc2 = account(id2, "User Two", BigDecimal.ZERO);
+        when(repository.findAllByIdNot(id1)).thenReturn(List.of(acc2));
 
-        var result = service.getTransferTargets("user1");
+        var result = service.getTransferTargets(id1);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).login()).isEqualTo("user2");
+        assertThat(result.get(0).accountId()).isEqualTo(id2);
     }
 
-    private static Account account(String login, String name, BigDecimal balance) {
+    private static Account account(UUID id, String name, BigDecimal balance) {
         return Account.builder()
-                .id(UUID.randomUUID())
-                .login(login)
+                .id(id)
                 .name(name)
                 .birthdate(LocalDate.of(1990, 1, 1))
                 .balance(balance)

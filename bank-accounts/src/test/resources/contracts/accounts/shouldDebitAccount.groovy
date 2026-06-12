@@ -4,7 +4,7 @@ Contract.make {
     description("Списание средств со счёта")
     request {
         method 'POST'
-        url '/api/accounts/user1/debit'
+        url '/api/accounts/afd94176-3179-4285-9f6b-96fd9131628a/debit'
         headers {
             contentType(applicationJson())
             header("Authorization", "Bearer test-token")

@@ -42,7 +42,7 @@ class AccountControllerIntegrationTest extends BaseIntegrationTest {
         var entity = new HttpEntity<>(body, headers);
 
         var response = restTemplate.exchange(
-                "/api/accounts/user1/debit", HttpMethod.POST, entity, String.class);
+                "/api/accounts/afd94176-3179-4285-9f6b-96fd9131628a/debit", HttpMethod.POST, entity, String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
@@ -55,7 +55,7 @@ class AccountControllerIntegrationTest extends BaseIntegrationTest {
         var entity = new HttpEntity<>(body, headers);
 
         var response = restTemplate.exchange(
-                "/api/accounts/user1/credit", HttpMethod.POST, entity, String.class);
+                "/api/accounts/afd94176-3179-4285-9f6b-96fd9131628a/credit", HttpMethod.POST, entity, String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }

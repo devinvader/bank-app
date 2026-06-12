@@ -10,6 +10,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.devinvader.bank.accounts.config.SecurityConfig;
 import ru.devinvader.bank.accounts.config.TestSecurityConfig;
+import ru.devinvader.bank.common.config.CurrentUserWebMvcConfigurer;
 import ru.devinvader.bank.accounts.exception.AccountNotFoundException;
 import ru.devinvader.bank.accounts.exception.AgeValidationException;
 import ru.devinvader.bank.accounts.exception.InsufficientBalanceException;
@@ -19,6 +20,7 @@ import ru.devinvader.bank.accounts.service.AccountService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -32,8 +34,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AccountController.class)
-@Import({SecurityConfig.class, TestSecurityConfig.class})
-@TestPropertySource(properties = {"spring.autoconfigure.exclude=org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2ClientAutoConfiguration,org.springframework.boot.security.oauth2.client.autoconfigure.servlet.OAuth2ClientServletAutoConfiguration"})
+@Import({SecurityConfig.class, TestSecurityConfig.class, CurrentUserWebMvcConfigurer.class})
+@TestPropertySource(properties = {"spring.autoconfigure.exclude=org.springframework.boot.security.oauth2.client.autoconfigure.OAuth2ClientAutoConfiguration,org.springframework.boot.security.oauth2.client.autoconfigure.servlet.OAuth2ClientServletAutoConfiguration", "spring.main.allow-bean-definition-overriding=true"})
 class AccountControllerTest {
 
     @Autowired
@@ -44,14 +46,15 @@ class AccountControllerTest {
 
     @Test
     void getCurrentAccount_withValidJwt_shouldReturnOk() throws Exception {
-        var response = new AccountResponse("user1", "Иван Иванов", LocalDate.of(1990, 1, 1), BigDecimal.valueOf(1000));
-        when(accountService.getByLogin("user1")).thenReturn(response);
+        UUID id = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
+        var response = new AccountResponse(id, "Иван Иванов", LocalDate.of(1990, 1, 1), BigDecimal.valueOf(1000));
+        when(accountService.getById(id)).thenReturn(response);
 
         mockMvc.perform(get("/api/accounts/me")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "accounts:read")
-                                .claim("preferred_username", "user1"))))
+                                .claim("sub", "afd94176-3179-4285-9f6b-96fd9131628a"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.login").value("user1"))
+                .andExpect(jsonPath("$.accountId").value("afd94176-3179-4285-9f6b-96fd9131628a"))
                 .andExpect(jsonPath("$.balance").value(1000));
     }
 
@@ -64,12 +67,13 @@ class AccountControllerTest {
 
     @Test
     void updateCurrentAccount_withValidData_shouldReturnOk() throws Exception {
-        var response = new AccountResponse("user1", "Новое Имя", LocalDate.of(1990, 1, 1), BigDecimal.valueOf(1000));
-        when(accountService.update(eq("user1"), any())).thenReturn(response);
+        UUID id = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
+        var response = new AccountResponse(id, "Новое Имя", LocalDate.of(1990, 1, 1), BigDecimal.valueOf(1000));
+        when(accountService.update(eq(id), any())).thenReturn(response);
 
         mockMvc.perform(put("/api/accounts/me")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "accounts:write")
-                                .claim("preferred_username", "user1")))
+                                .claim("sub", "afd94176-3179-4285-9f6b-96fd9131628a")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -85,7 +89,7 @@ class AccountControllerTest {
     void updateCurrentAccount_withInvalidBody_shouldReturnBadRequest() throws Exception {
         mockMvc.perform(put("/api/accounts/me")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "accounts:write")
-                                .claim("preferred_username", "user1")))
+                                .claim("sub", "afd94176-3179-4285-9f6b-96fd9131628a")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -98,21 +102,23 @@ class AccountControllerTest {
 
     @Test
     void getTransferTargets_withValidJwt_shouldReturnList() throws Exception {
+        UUID id = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
+        UUID targetId = UUID.fromString("447129a6-bf9b-4dcd-9b35-36d192bb525a");
         var targets = List.of(
-                new AccountResponse("user2", "Петр Петров", LocalDate.of(1992, 5, 10), BigDecimal.valueOf(500))
+                new AccountResponse(targetId, "Петр Петров", LocalDate.of(1992, 5, 10), BigDecimal.valueOf(500))
         );
-        when(accountService.getTransferTargets("user1")).thenReturn(targets);
+        when(accountService.getTransferTargets(id)).thenReturn(targets);
 
         mockMvc.perform(get("/api/accounts/transfer-targets")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "accounts:read")
-                                .claim("preferred_username", "user1"))))
+                                .claim("sub", "afd94176-3179-4285-9f6b-96fd9131628a"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].login").value("user2"));
+                .andExpect(jsonPath("$[0].accountId").value("447129a6-bf9b-4dcd-9b35-36d192bb525a"));
     }
 
     @Test
     void debit_withValidJwtAndBody_shouldReturnOk() throws Exception {
-        mockMvc.perform(post("/api/accounts/user1/debit")
+        mockMvc.perform(post("/api/accounts/afd94176-3179-4285-9f6b-96fd9131628a/debit")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "accounts:write")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -125,7 +131,7 @@ class AccountControllerTest {
 
     @Test
     void credit_withValidJwtAndBody_shouldReturnOk() throws Exception {
-        mockMvc.perform(post("/api/accounts/user1/credit")
+        mockMvc.perform(post("/api/accounts/afd94176-3179-4285-9f6b-96fd9131628a/credit")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "accounts:write")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -138,20 +144,22 @@ class AccountControllerTest {
 
     @Test
     void getCurrentAccount_accountNotFound_shouldReturnNotFound() throws Exception {
-        when(accountService.getByLogin("user1")).thenThrow(new AccountNotFoundException("user1"));
+        UUID id = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
+        when(accountService.getById(id)).thenThrow(new AccountNotFoundException(id));
 
         mockMvc.perform(get("/api/accounts/me")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "accounts:read")
-                                .claim("preferred_username", "user1"))))
+                                .claim("sub", "afd94176-3179-4285-9f6b-96fd9131628a"))))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void debit_insufficientBalance_shouldReturnUnprocessableEntity() throws Exception {
+        UUID id = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
         doThrow(new InsufficientBalanceException(BigDecimal.valueOf(500), BigDecimal.valueOf(100)))
-                .when(accountService).debit(eq("user1"), any());
+                .when(accountService).debit(eq(id), any());
 
-        mockMvc.perform(post("/api/accounts/user1/debit")
+        mockMvc.perform(post("/api/accounts/afd94176-3179-4285-9f6b-96fd9131628a/debit")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "accounts:write")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -163,41 +171,44 @@ class AccountControllerTest {
     }
 
     @Test
-    void getByLogin_withValidJwt_shouldReturnAccount() throws Exception {
-        var response = new AccountResponse("user1", "Иван Иванов", LocalDate.of(1990, 1, 1), BigDecimal.valueOf(1000));
-        when(accountService.getByLogin("user1")).thenReturn(response);
+    void getById_withValidJwt_shouldReturnAccount() throws Exception {
+        UUID id = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
+        var response = new AccountResponse(id, "Иван Иванов", LocalDate.of(1990, 1, 1), BigDecimal.valueOf(1000));
+        when(accountService.getById(id)).thenReturn(response);
 
-        mockMvc.perform(get("/api/accounts/user1")
+        mockMvc.perform(get("/api/accounts/afd94176-3179-4285-9f6b-96fd9131628a")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "accounts:read"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.login").value("user1"))
+                .andExpect(jsonPath("$.accountId").value("afd94176-3179-4285-9f6b-96fd9131628a"))
                 .andExpect(jsonPath("$.balance").value(1000));
     }
 
     @Test
-    void getByLogin_withWrongScope_shouldReturnForbidden() throws Exception {
-        mockMvc.perform(get("/api/accounts/user1")
+    void getById_withWrongScope_shouldReturnForbidden() throws Exception {
+        mockMvc.perform(get("/api/accounts/afd94176-3179-4285-9f6b-96fd9131628a")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "wrong:scope"))))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    void getByLogin_accountNotFound_shouldReturnNotFound() throws Exception {
-        when(accountService.getByLogin("user1")).thenThrow(new AccountNotFoundException("user1"));
+    void getById_accountNotFound_shouldReturnNotFound() throws Exception {
+        UUID id = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
+        when(accountService.getById(id)).thenThrow(new AccountNotFoundException(id));
 
-        mockMvc.perform(get("/api/accounts/user1")
+        mockMvc.perform(get("/api/accounts/afd94176-3179-4285-9f6b-96fd9131628a")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "accounts:read"))))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void update_ageValidation_shouldReturnBadRequest() throws Exception {
-        when(accountService.update(eq("user1"), any()))
+        UUID id = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
+        when(accountService.update(eq(id), any()))
                 .thenThrow(new AgeValidationException("User must be at least 18"));
 
         mockMvc.perform(put("/api/accounts/me")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "accounts:write")
-                                .claim("preferred_username", "user1")))
+                                .claim("sub", "afd94176-3179-4285-9f6b-96fd9131628a")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {

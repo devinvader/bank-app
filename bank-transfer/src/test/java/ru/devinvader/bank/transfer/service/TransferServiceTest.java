@@ -5,6 +5,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.support.ResourceBundleMessageSource;
+import ru.devinvader.bank.common.model.NotificationMessages;
+import ru.devinvader.bank.transfer.mapper.TransferMapper;
 import ru.devinvader.bank.transfer.model.TransferRecord;
 import ru.devinvader.bank.transfer.model.TransferRequest;
 import ru.devinvader.bank.transfer.model.TransferStatus;
@@ -30,15 +33,19 @@ class TransferServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new TransferServiceImpl(repository, null);
+        var messageSource = new ResourceBundleMessageSource();
+        messageSource.setBasename("notification-messages");
+        messageSource.setDefaultEncoding("UTF-8");
+        service = new TransferServiceImpl(repository, null, null,
+                new NotificationMessages(messageSource), new TransferMapper());
     }
 
     @Test
     void execute_shouldFailWithoutWebClient() {
-        var request = new TransferRequest("user2", BigDecimal.valueOf(100));
+        var request = new TransferRequest(UUID.fromString("447129a6-bf9b-4dcd-9b35-36d192bb525a"), BigDecimal.valueOf(100));
         when(repository.save(any(TransferRecord.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        assertThatThrownBy(() -> service.execute("user1", request))
+        assertThatThrownBy(() -> service.execute(UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a"), request))
                 .isInstanceOf(RuntimeException.class);
     }
 
@@ -46,18 +53,18 @@ class TransferServiceTest {
     void getHistory_shouldReturnTransfers() {
         var transfer = TransferRecord.builder()
                 .id(UUID.randomUUID())
-                .fromAccount("user1")
-                .toAccount("user2")
+                .fromAccount(UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a"))
+                .toAccount(UUID.fromString("447129a6-bf9b-4dcd-9b35-36d192bb525a"))
                 .amount(BigDecimal.valueOf(100))
                 .status(TransferStatus.COMPLETED)
                 .createdAt(Instant.now())
                 .completedAt(Instant.now())
                 .build();
-        when(repository.findByFromAccount("user1")).thenReturn(List.of(transfer));
+        when(repository.findByFromAccount(UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a"))).thenReturn(List.of(transfer));
 
-        var history = service.getHistory("user1");
+        var history = service.getHistory(UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a"));
 
         assertThat(history).hasSize(1);
-        assertThat(history.get(0).fromLogin()).isEqualTo("user1");
+        assertThat(history.get(0).fromAccountId()).isEqualTo(UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a"));
     }
 }

@@ -20,6 +20,7 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/transfer")
                         .hasAuthority("SCOPE_transfer:execute")
                         .requestMatchers(HttpMethod.GET, "/api/transfer/history")

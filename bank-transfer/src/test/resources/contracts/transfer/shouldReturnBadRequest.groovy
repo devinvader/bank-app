@@ -10,7 +10,7 @@ Contract.make {
             header("Authorization", "Bearer test-token")
         }
         body([
-            toLogin: "",
+            toAccountId: "",
             amount: -1
         ])
     }

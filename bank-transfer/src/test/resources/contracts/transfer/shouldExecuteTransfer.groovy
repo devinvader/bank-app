@@ -10,7 +10,7 @@ Contract.make {
             header("Authorization", "Bearer test-token")
         }
         body([
-            toLogin: "user2",
+            toAccountId: "447129a6-bf9b-4dcd-9b35-36d192bb525a",
             amount: 100
         ])
     }
@@ -21,8 +21,8 @@ Contract.make {
         }
         body([
             id: $(anyUuid()),
-            fromLogin: "user1",
-            toLogin: "user2",
+            fromAccountId: "afd94176-3179-4285-9f6b-96fd9131628a",
+            toAccountId: "447129a6-bf9b-4dcd-9b35-36d192bb525a",
             amount: 100,
             status: $(anyNonBlankString()),
             timestamp: $(anyNonBlankString())

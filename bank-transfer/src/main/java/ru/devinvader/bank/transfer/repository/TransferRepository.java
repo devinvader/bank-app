@@ -13,5 +13,5 @@ public interface TransferRepository extends CrudRepository<TransferRecord, UUID>
 
     List<TransferRecord> findByStatus(TransferStatus status);
 
-    List<TransferRecord> findByFromAccount(String login);
+    List<TransferRecord> findByFromAccount(UUID fromAccount);
 }

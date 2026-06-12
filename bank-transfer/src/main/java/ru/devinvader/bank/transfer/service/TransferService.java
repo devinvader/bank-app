@@ -1,13 +1,17 @@
 package ru.devinvader.bank.transfer.service;
 
+import ru.devinvader.bank.transfer.model.TransferRecord;
 import ru.devinvader.bank.transfer.model.TransferRequest;
 import ru.devinvader.bank.transfer.model.TransferResponse;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface TransferService {
 
-    TransferResponse execute(String fromLogin, TransferRequest request);
+    TransferResponse execute(UUID fromAccountId, TransferRequest request);
 
-    List<TransferResponse> getHistory(String login);
+    TransferResponse retryTransfer(TransferRecord existing);
+
+    List<TransferResponse> getHistory(UUID accountId);
 }

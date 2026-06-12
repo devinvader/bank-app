@@ -9,7 +9,7 @@ Contract.make {
             contentType(applicationJson())
         }
         body([
-            toLogin: "user2",
+            toAccountId: "447129a6-bf9b-4dcd-9b35-36d192bb525a",
             amount: 100
         ])
     }

@@ -8,10 +8,10 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.reactive.function.client.WebClient;
-import ru.devinvader.bank.transfer.integration.TestcontainersConfiguration;
+import ru.devinvader.bank.commontest.config.AbstractTestcontainersConfiguration;
 
 @SpringBootTest
-@Import(TestcontainersConfiguration.class)
+@Import(AbstractTestcontainersConfiguration.class)
 class TransferApplicationTests {
 
     @MockitoBean

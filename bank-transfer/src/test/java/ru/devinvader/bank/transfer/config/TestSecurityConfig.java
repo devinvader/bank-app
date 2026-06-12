@@ -3,10 +3,11 @@ package ru.devinvader.bank.transfer.config;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.web.reactive.function.client.WebClient;
+import ru.devinvader.bank.commontest.util.JwtTestUtils;
 
-import java.time.Instant;
+import static org.mockito.Mockito.mock;
 
 @TestConfiguration
 public class TestSecurityConfig {
@@ -14,13 +15,12 @@ public class TestSecurityConfig {
     @Bean
     @Primary
     public JwtDecoder jwtDecoder() {
-        return token -> Jwt.withTokenValue(token)
-                .header("alg", "none")
-                .claim("scope", "transfer:execute transfer:read")
-                .claim("preferred_username", "user1")
-                .claim("sub", "user1")
-                .issuedAt(Instant.now())
-                .expiresAt(Instant.now().plusSeconds(3600))
-                .build();
+        return JwtTestUtils.testJwtDecoder("transfer:execute transfer:read");
+    }
+
+    @Bean
+    @Primary
+    public WebClient.Builder webClientBuilder() {
+        return mock(WebClient.Builder.class);
     }
 }

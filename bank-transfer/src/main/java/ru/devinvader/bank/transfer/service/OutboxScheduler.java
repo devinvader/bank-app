@@ -1,38 +1,42 @@
 package ru.devinvader.bank.transfer.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-import ru.devinvader.bank.transfer.model.TransferRecord;
 import ru.devinvader.bank.transfer.model.TransferStatus;
 import ru.devinvader.bank.transfer.repository.TransferRepository;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class OutboxScheduler {
 
     private final TransferRepository repository;
     private final TransferService transferService;
+    private final int maxRetries;
+
+    public OutboxScheduler(TransferRepository repository,
+                           TransferService transferService,
+                           @Value("${outbox.scheduler.max-retries:3}") int maxRetries) {
+        this.repository = repository;
+        this.transferService = transferService;
+        this.maxRetries = maxRetries;
+    }
 
     @Scheduled(fixedDelayString = "${outbox.scheduler.interval:5000}")
-    @Transactional
     public void processOutbox() {
         var failedTransfers = repository.findByStatus(TransferStatus.FAILED);
 
-        for (TransferRecord transfer : failedTransfers) {
+        for (var transfer : failedTransfers) {
+            if (transfer.retryCount() >= maxRetries) {
+                log.warn("Transfer {} exceeded max retries ({}), giving up",
+                        transfer.id(), maxRetries);
+                continue;
+            }
             try {
-                log.info("Retrying failed transfer: {}", transfer.id());
-                transfer = transfer.toBuilder()
-                        .status(TransferStatus.PENDING)
-                        .build();
-                repository.save(transfer);
-
-                var request = new ru.devinvader.bank.transfer.model.TransferRequest(
-                        transfer.toAccount(), transfer.amount());
-                transferService.execute(transfer.fromAccount(), request);
+                log.info("Retrying failed transfer: {} (attempt {}/{})",
+                        transfer.id(), transfer.retryCount() + 1, maxRetries);
+                transferService.retryTransfer(transfer);
             } catch (Exception e) {
                 log.error("Retry failed for transfer: {}", transfer.id(), e);
             }

@@ -20,12 +20,12 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: from_account
-                  type: VARCHAR(100)
+                  type: UUID
                   constraints:
                     nullable: false
               - column:
                   name: to_account
-                  type: VARCHAR(100)
+                  type: UUID
                   constraints:
                     nullable: false
               - column:

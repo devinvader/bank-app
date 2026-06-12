@@ -18,6 +18,7 @@
     <description>Bank app for Yandex Practicum</description>
 
     <modules>
+        <module>bank-common</module>
         <module>bank-front-ui</module>
         <module>bank-accounts</module>
         <module>bank-cash</module>
@@ -80,11 +81,4 @@
         </pluginManagement>
     </build>
 
-    <dependencies>
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
 </project>

@@ -5,17 +5,20 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.devinvader.bank.frontui.client.BankApiClient;
 import ru.devinvader.bank.frontui.exception.BadRequestException;
 import ru.devinvader.bank.frontui.exception.InsufficientFundsException;
 import ru.devinvader.bank.frontui.exception.ServiceUnavailableException;
+import ru.devinvader.bank.frontui.mapper.FrontUiMapper;
 import ru.devinvader.bank.frontui.model.AccountDto;
 import ru.devinvader.bank.frontui.model.AccountPageModel;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -31,12 +34,15 @@ class TransferFrontServiceTest {
     @Mock
     private AccountFrontService accountFrontService;
 
+    @Spy
+    private FrontUiMapper frontUiMapper;
+
     @InjectMocks
     private TransferFrontServiceImpl transferFrontService;
 
     private AccountPageModel mockCurrentPage() {
         var page = new AccountPageModel("Тест", LocalDate.of(1990, 1, 1),
-                BigDecimal.valueOf(1000), List.of(new AccountDto("user2", "Петр")), null, null);
+                BigDecimal.valueOf(1000), List.of(new AccountDto(UUID.fromString("447129a6-bf9b-4dcd-9b35-36d192bb525a"), "Петр")), null, null);
         when(accountFrontService.getAccountPage()).thenReturn(page);
         return page;
     }
@@ -45,17 +51,17 @@ class TransferFrontServiceTest {
     void transfer_validData_shouldReturnSuccess() {
         mockCurrentPage();
 
-        var page = transferFrontService.processTransfer("user2", BigDecimal.valueOf(100));
+        var page = transferFrontService.processTransfer(UUID.fromString("447129a6-bf9b-4dcd-9b35-36d192bb525a"), BigDecimal.valueOf(100));
 
         assertThat(page.info()).contains("Успешно переведено");
-        assertThat(page.info()).contains("user2");
+        assertThat(page.info()).contains("Петр");
     }
 
     @Test
     void transfer_negativeAmount_shouldReturnValidationError() {
         mockCurrentPage();
 
-        var page = transferFrontService.processTransfer("user2", BigDecimal.valueOf(-50));
+        var page = transferFrontService.processTransfer(UUID.fromString("447129a6-bf9b-4dcd-9b35-36d192bb525a"), BigDecimal.valueOf(-50));
 
         assertThat(page.errors()).contains("Сумма перевода должна быть положительной");
     }
@@ -64,18 +70,9 @@ class TransferFrontServiceTest {
     void transfer_zeroAmount_shouldReturnValidationError() {
         mockCurrentPage();
 
-        var page = transferFrontService.processTransfer("user2", BigDecimal.ZERO);
+        var page = transferFrontService.processTransfer(UUID.fromString("447129a6-bf9b-4dcd-9b35-36d192bb525a"), BigDecimal.ZERO);
 
         assertThat(page.errors()).contains("Сумма перевода должна быть положительной");
-    }
-
-    @Test
-    void transfer_blankTarget_shouldReturnValidationError() {
-        mockCurrentPage();
-
-        var page = transferFrontService.processTransfer("   ", BigDecimal.TEN);
-
-        assertThat(page.errors()).contains("Выберите получателя");
     }
 
     @Test
@@ -93,7 +90,7 @@ class TransferFrontServiceTest {
         doThrow(new InsufficientFundsException("Недостаточно средств"))
                 .when(bankApiClient).transfer(any());
 
-        var page = transferFrontService.processTransfer("user2", BigDecimal.valueOf(99999));
+        var page = transferFrontService.processTransfer(UUID.fromString("447129a6-bf9b-4dcd-9b35-36d192bb525a"), BigDecimal.valueOf(99999));
 
         assertThat(page.errors()).contains("Недостаточно средств");
     }
@@ -104,7 +101,7 @@ class TransferFrontServiceTest {
         doThrow(new BadRequestException("Bad request"))
                 .when(bankApiClient).transfer(any());
 
-        var page = transferFrontService.processTransfer("user2", BigDecimal.valueOf(100));
+        var page = transferFrontService.processTransfer(UUID.fromString("447129a6-bf9b-4dcd-9b35-36d192bb525a"), BigDecimal.valueOf(100));
 
         assertThat(page.errors()).contains("Некорректные данные перевода");
     }
@@ -115,7 +112,7 @@ class TransferFrontServiceTest {
         doThrow(new ServiceUnavailableException("Service down"))
                 .when(bankApiClient).transfer(any());
 
-        var page = transferFrontService.processTransfer("user2", BigDecimal.valueOf(100));
+        var page = transferFrontService.processTransfer(UUID.fromString("447129a6-bf9b-4dcd-9b35-36d192bb525a"), BigDecimal.valueOf(100));
 
         assertThat(page.errors()).contains("Сервис временно недоступен");
     }

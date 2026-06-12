@@ -21,6 +21,7 @@ import ru.devinvader.bank.frontui.service.TransferFrontService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Controller
@@ -61,8 +62,8 @@ public class MainController {
     @PostMapping("/transfer")
     public String transfer(Model model,
                             @RequestParam("value") @Positive BigDecimal value,
-                            @RequestParam("login") @NotBlank String targetLogin) {
-        fillModel(model, transferFrontService.processTransfer(targetLogin, value));
+                            @RequestParam("accountId") @NotNull UUID targetAccountId) {
+        fillModel(model, transferFrontService.processTransfer(targetAccountId, value));
         return "main";
     }
 

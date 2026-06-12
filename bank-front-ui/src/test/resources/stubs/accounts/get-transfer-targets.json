@@ -15,7 +15,7 @@
     },
     "jsonBody": [
       {
-        "login": "user2",
+        "accountId": "447129a6-bf9b-4dcd-9b35-36d192bb525a",
         "name": "Петр Петров",
         "birthdate": "1992-05-10",
         "balance": 500.00

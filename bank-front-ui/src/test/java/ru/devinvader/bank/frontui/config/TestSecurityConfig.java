@@ -4,14 +4,15 @@ import org.mockito.Mockito;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
-import org.springframework.security.oauth2.client.*;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import ru.devinvader.bank.commontest.util.JwtTestUtils;
 import ru.devinvader.bank.frontui.service.TokenProvider;
 
 import java.time.Instant;
@@ -26,14 +27,7 @@ public class TestSecurityConfig {
     @Bean
     @Primary
     public JwtDecoder jwtDecoder() {
-        return token -> Jwt.withTokenValue(token)
-                .header("alg", "none")
-                .claim("scope", "accounts:read accounts:write cash:operate transfer:execute")
-                .claim("preferred_username", "user1")
-                .claim("sub", "user1")
-                .issuedAt(Instant.now())
-                .expiresAt(Instant.now().plusSeconds(3600))
-                .build();
+        return JwtTestUtils.testJwtDecoder("accounts:read accounts:write cash:operate transfer:execute");
     }
 
     @Bean
@@ -47,7 +41,7 @@ public class TestSecurityConfig {
                 .authorizationUri("http://localhost:8089/realms/bank/protocol/openid-connect/auth")
                 .tokenUri("http://localhost:8089/realms/bank/protocol/openid-connect/token")
                 .userInfoUri("http://localhost:8089/realms/bank/protocol/openid-connect/userinfo")
-                .userNameAttributeName("preferred_username")
+                .userNameAttributeName("sub")
                 .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
                 .build();
         when(repo.findByRegistrationId("keycloak")).thenReturn(registration);
@@ -60,8 +54,8 @@ public class TestSecurityConfig {
         var service = Mockito.mock(OAuth2AuthorizedClientService.class);
         var token = new OAuth2AccessToken(OAuth2AccessToken.TokenType.BEARER,
                 "test-token", Instant.now(), Instant.now().plusSeconds(3600));
-        var client = new OAuth2AuthorizedClient(mock(ClientRegistration.class), "user1", token, null);
-        when(service.loadAuthorizedClient(eq("keycloak"), eq("user1"))).thenReturn(client);
+        var client = new OAuth2AuthorizedClient(mock(ClientRegistration.class), JwtTestUtils.TEST_SUBJECT, token, null);
+        when(service.loadAuthorizedClient(eq("keycloak"), eq(JwtTestUtils.TEST_SUBJECT))).thenReturn(client);
         return service;
     }
 
@@ -70,7 +64,7 @@ public class TestSecurityConfig {
     public TokenProvider tokenProvider(OAuth2AuthorizedClientService authorizedClientService) {
         var provider = Mockito.mock(TokenProvider.class);
         when(provider.getAccessToken()).thenReturn("test-token");
-        when(provider.getUsername()).thenReturn("user1");
+        when(provider.getUsername()).thenReturn(JwtTestUtils.TEST_SUBJECT);
         return provider;
     }
 }

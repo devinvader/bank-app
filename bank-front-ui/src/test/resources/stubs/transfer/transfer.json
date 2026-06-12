@@ -15,8 +15,8 @@
     },
     "jsonBody": {
       "id": "550e8400-e29b-41d4-a716-446655440000",
-      "fromLogin": "user1",
-      "toLogin": "user2",
+      "fromAccountId": "afd94176-3179-4285-9f6b-96fd9131628a",
+      "toAccountId": "447129a6-bf9b-4dcd-9b35-36d192bb525a",
       "amount": 50.00,
       "status": "COMPLETED",
       "timestamp": "2025-01-01T00:00:00Z"

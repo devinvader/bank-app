@@ -18,6 +18,7 @@ import ru.devinvader.bank.frontui.service.TransferFrontService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -46,12 +47,12 @@ class MainControllerTest {
     @Test
     void getAccount_shouldReturnMainPage() throws Exception {
         var page = new AccountPageModel("Иван Иванов", LocalDate.of(1990, 1, 1),
-                BigDecimal.valueOf(1000), List.of(new AccountDto("user2", "Петр")), null, null);
+                BigDecimal.valueOf(1000), List.of(new AccountDto(UUID.fromString("447129a6-bf9b-4dcd-9b35-36d192bb525a"), "Петр")), null, null);
         when(accountFrontService.getAccountPage()).thenReturn(page);
 
         mockMvc.perform(get("/account")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "accounts:read accounts:write")
-                                .claim("preferred_username", "user1"))))
+                                .claim("sub", "afd94176-3179-4285-9f6b-96fd9131628a"))))
                 .andExpect(status().isOk())
                 .andExpect(view().name("main"))
                 .andExpect(model().attribute("name", "Иван Иванов"));
@@ -67,7 +68,7 @@ class MainControllerTest {
     void index_shouldRedirectToAccount() throws Exception {
         mockMvc.perform(get("/")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "accounts:read")
-                                .claim("preferred_username", "user1"))))
+                                .claim("sub", "afd94176-3179-4285-9f6b-96fd9131628a"))))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/account"));
     }
@@ -81,7 +82,7 @@ class MainControllerTest {
 
         mockMvc.perform(post("/account")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "accounts:write")
-                                .claim("preferred_username", "user1")))
+                                .claim("sub", "afd94176-3179-4285-9f6b-96fd9131628a")))
                         .param("name", "Иван")
                         .param("birthdate", "1990-01-01"))
                 .andExpect(status().isOk())
@@ -97,7 +98,7 @@ class MainControllerTest {
 
         mockMvc.perform(post("/account")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "accounts:write")
-                                .claim("preferred_username", "user1")))
+                                .claim("sub", "afd94176-3179-4285-9f6b-96fd9131628a")))
                         .param("name", "Юный")
                         .param("birthdate", LocalDate.now().minusYears(17).toString()))
                 .andExpect(status().isOk())
@@ -111,7 +112,7 @@ class MainControllerTest {
 
         mockMvc.perform(post("/account")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "accounts:write")
-                                .claim("preferred_username", "user1")))
+                                .claim("sub", "afd94176-3179-4285-9f6b-96fd9131628a")))
                         .param("name", "Иван")
                         .param("birthdate", "1990-01-01"))
                 .andExpect(status().isOk())
@@ -126,7 +127,7 @@ class MainControllerTest {
 
         mockMvc.perform(post("/cash")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "cash:operate")
-                                .claim("preferred_username", "user1")))
+                                .claim("sub", "afd94176-3179-4285-9f6b-96fd9131628a")))
                         .param("value", "100")
                         .param("action", "DEPOSIT"))
                 .andExpect(status().isOk())
@@ -141,7 +142,7 @@ class MainControllerTest {
 
         mockMvc.perform(post("/cash")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "cash:operate")
-                                .claim("preferred_username", "user1")))
+                                .claim("sub", "afd94176-3179-4285-9f6b-96fd9131628a")))
                         .param("value", "50")
                         .param("action", "WITHDRAW"))
                 .andExpect(status().isOk())
@@ -156,7 +157,7 @@ class MainControllerTest {
 
         mockMvc.perform(post("/cash")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "cash:operate")
-                                .claim("preferred_username", "user1")))
+                                .claim("sub", "afd94176-3179-4285-9f6b-96fd9131628a")))
                         .param("value", "99999")
                         .param("action", "WITHDRAW"))
                 .andExpect(status().isOk())
@@ -165,15 +166,15 @@ class MainControllerTest {
 
     @Test
     void transfer_validData_shouldRenderMain() throws Exception {
-        var page = new AccountPageModel("", null, BigDecimal.ZERO, List.of(), null, "Успешно переведено 50 руб клиенту user2");
-        when(transferFrontService.processTransfer(eq("user2"), eq(BigDecimal.valueOf(50))))
+        var page = new AccountPageModel("", null, BigDecimal.ZERO, List.of(), null, "Успешно переведено 50 руб клиенту 447129a6-bf9b-4dcd-9b35-36d192bb525a");
+        when(transferFrontService.processTransfer(eq(UUID.fromString("447129a6-bf9b-4dcd-9b35-36d192bb525a")), eq(BigDecimal.valueOf(50))))
                 .thenReturn(page);
 
         mockMvc.perform(post("/transfer")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "transfer:execute")
-                                .claim("preferred_username", "user1")))
+                                .claim("sub", "afd94176-3179-4285-9f6b-96fd9131628a")))
                         .param("value", "50")
-                        .param("login", "user2"))
+                        .param("accountId", "447129a6-bf9b-4dcd-9b35-36d192bb525a"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("main"));
     }
@@ -181,14 +182,14 @@ class MainControllerTest {
     @Test
     void transfer_serviceUnavailable_shouldShowError() throws Exception {
         var page = AccountPageModel.withError("Сервис временно недоступен");
-        when(transferFrontService.processTransfer(eq("user2"), eq(BigDecimal.valueOf(50))))
+        when(transferFrontService.processTransfer(eq(UUID.fromString("447129a6-bf9b-4dcd-9b35-36d192bb525a")), eq(BigDecimal.valueOf(50))))
                 .thenReturn(page);
 
         mockMvc.perform(post("/transfer")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "transfer:execute")
-                                .claim("preferred_username", "user1")))
+                                .claim("sub", "afd94176-3179-4285-9f6b-96fd9131628a")))
                         .param("value", "50")
-                        .param("login", "user2"))
+                        .param("accountId", "447129a6-bf9b-4dcd-9b35-36d192bb525a"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("main"));
     }

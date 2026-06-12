@@ -21,10 +21,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
@@ -48,13 +48,13 @@ class CashFrontServiceTest {
     @BeforeEach
     void setUp() {
         SecurityContextHolder.getContext().setAuthentication(
-                new OAuth2AuthenticationToken(new DefaultOAuth2User(List.of(), Map.of("sub", "user1"), "sub"),
+                new OAuth2AuthenticationToken(new DefaultOAuth2User(List.of(), Map.of("sub", "afd94176-3179-4285-9f6b-96fd9131628a"), "sub"),
                         List.of(), "keycloak"));
         lenient().when(tokenProvider.getAccessToken()).thenReturn("test-token");
-        lenient().when(tokenProvider.getUsername()).thenReturn("user1");
+        lenient().when(tokenProvider.getUsername()).thenReturn("afd94176-3179-4285-9f6b-96fd9131628a");
 
         var currentPage = new AccountPageModel("Тест", LocalDate.of(1990, 1, 1),
-                BigDecimal.valueOf(500), List.of(new AccountDto("user2", "Петр")), null, null);
+                BigDecimal.valueOf(500), List.of(new AccountDto(UUID.fromString("447129a6-bf9b-4dcd-9b35-36d192bb525a"), "Петр")), null, null);
         when(accountFrontService.getAccountPage()).thenReturn(currentPage);
     }
 
@@ -73,7 +73,7 @@ class CashFrontServiceTest {
     @Test
     void withdraw_insufficientFunds_shouldReturnError() {
         doThrow(new InsufficientFundsException("Недостаточно средств на счету"))
-                .when(bankApiClient).withdraw(anyString(), any(BigDecimal.class));
+                .when(bankApiClient).withdraw(any(UUID.class), any(BigDecimal.class));
 
         var page = cashFrontService.processCashOperation(BigDecimal.valueOf(99999), CashAction.WITHDRAW);
 
@@ -90,7 +90,7 @@ class CashFrontServiceTest {
     @Test
     void processOperation_serviceUnavailable_shouldReturnError() {
         doThrow(new ServiceUnavailableException("Service down"))
-                .when(bankApiClient).deposit(anyString(), any(BigDecimal.class));
+                .when(bankApiClient).deposit(any(UUID.class), any(BigDecimal.class));
 
         var page = cashFrontService.processCashOperation(BigDecimal.TEN, CashAction.DEPOSIT);
 

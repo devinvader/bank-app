@@ -7,12 +7,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 import ru.devinvader.bank.frontui.client.BankApiClient;
+import ru.devinvader.bank.frontui.mapper.FrontUiMapper;
 import ru.devinvader.bank.frontui.model.AccountUpdateRequestDto;
 import ru.devinvader.bank.frontui.model.TransferRequestDto;
 import ru.devinvader.bank.frontui.service.TokenProvider;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
@@ -35,7 +37,7 @@ class ContractTest {
         var tokenProvider = mock(TokenProvider.class);
         when(tokenProvider.getAccessToken()).thenReturn("test-token");
 
-        bankApiClient = new BankApiClient(tokenProvider, baseUrl, RestClient.builder().requestFactory(factory));
+        bankApiClient = new BankApiClient(tokenProvider, baseUrl, RestClient.builder().requestFactory(factory), new FrontUiMapper());
     }
 
     @AfterAll
@@ -49,7 +51,7 @@ class ContractTest {
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
-                                {"login":"user1","name":"Иван","birthdate":"1990-01-01","balance":1000.00}
+                                {"accountId":"afd94176-3179-4285-9f6b-96fd9131628a","name":"Иван","birthdate":"1990-01-01","balance":1000.00}
                                 """)));
 
         var result = bankApiClient.getAccount();
@@ -63,7 +65,7 @@ class ContractTest {
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
-                                {"login":"user1","name":"Иван","birthdate":"1990-01-01","balance":1000.00}
+                                {"accountId":"afd94176-3179-4285-9f6b-96fd9131628a","name":"Иван","birthdate":"1990-01-01","balance":1000.00}
                                 """)));
 
         var result = bankApiClient.updateAccount(
@@ -78,10 +80,10 @@ class ContractTest {
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
-                                {"accountId":"user1","newBalance":1100.00,"type":"DEPOSIT","amount":100.00}
+                                {"accountId":"afd94176-3179-4285-9f6b-96fd9131628a","newBalance":1100.00,"type":"DEPOSIT","amount":100.00}
                                 """)));
 
-        var result = bankApiClient.deposit("user1", BigDecimal.valueOf(100));
+        var result = bankApiClient.deposit(UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a"), BigDecimal.valueOf(100));
 
         assertThat(result.newBalance()).isEqualByComparingTo(BigDecimal.valueOf(1100));
     }
@@ -92,10 +94,10 @@ class ContractTest {
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
-                                {"accountId":"user1","newBalance":900.00,"type":"WITHDRAWAL","amount":100.00}
+                                {"accountId":"afd94176-3179-4285-9f6b-96fd9131628a","newBalance":900.00,"type":"WITHDRAWAL","amount":100.00}
                                 """)));
 
-        var result = bankApiClient.withdraw("user1", BigDecimal.valueOf(100));
+        var result = bankApiClient.withdraw(UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a"), BigDecimal.valueOf(100));
 
         assertThat(result.newBalance()).isEqualByComparingTo(BigDecimal.valueOf(900));
     }
@@ -106,15 +108,15 @@ class ContractTest {
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
-                                {"id":"550e8400-e29b-41d4-a716-446655440000","fromLogin":"user1",
-                                 "toLogin":"user2","amount":50.00,"status":"COMPLETED","timestamp":"2025-01-01T00:00:00Z"}
+                                {"id":"550e8400-e29b-41d4-a716-446655440000","fromAccountId":"afd94176-3179-4285-9f6b-96fd9131628a",
+                                 "toAccountId":"447129a6-bf9b-4dcd-9b35-36d192bb525a","amount":50.00,"status":"COMPLETED","timestamp":"2025-01-01T00:00:00Z"}
                                 """)));
 
         var result = bankApiClient.transfer(
-                new TransferRequestDto("user2", BigDecimal.valueOf(50)));
+                new TransferRequestDto(UUID.fromString("447129a6-bf9b-4dcd-9b35-36d192bb525a"), BigDecimal.valueOf(50)));
 
         assertThat(result.status()).isEqualTo("COMPLETED");
-        assertThat(result.toLogin()).isEqualTo("user2");
+        assertThat(result.toAccountId()).isEqualTo(UUID.fromString("447129a6-bf9b-4dcd-9b35-36d192bb525a"));
     }
 
     @Test
@@ -123,12 +125,12 @@ class ContractTest {
                 .willReturn(aResponse()
                         .withHeader("Content-Type", "application/json")
                         .withBody("""
-                                [{"login":"user2","name":"Петр","birthdate":"1992-05-10","balance":500.00}]
+                                [{"accountId":"447129a6-bf9b-4dcd-9b35-36d192bb525a","name":"Петр","birthdate":"1992-05-10","balance":500.00}]
                                 """)));
 
         var result = bankApiClient.getTransferTargets();
 
         assertThat(result).hasSize(1);
-        assertThat(result.getFirst().login()).isEqualTo("user2");
+        assertThat(result.getFirst().accountId()).isEqualTo(UUID.fromString("447129a6-bf9b-4dcd-9b35-36d192bb525a"));
     }
 }

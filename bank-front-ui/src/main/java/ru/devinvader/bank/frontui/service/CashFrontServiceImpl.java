@@ -9,6 +9,7 @@ import ru.devinvader.bank.frontui.model.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -24,18 +25,20 @@ public class CashFrontServiceImpl implements CashFrontService {
             return getCurrentPage().withErrors(List.of("Сумма должна быть положительной"));
 
         try {
-            var username = tokenProvider.getUsername();
+            var accountId = UUID.fromString(tokenProvider.getUsername());
             if (action == CashAction.DEPOSIT) {
-                bankApiClient.deposit(username, amount);
+                bankApiClient.deposit(accountId, amount);
                 return getCurrentPage().withInfo("Положено " + amount + " руб");
             } else {
-                bankApiClient.withdraw(username, amount);
+                bankApiClient.withdraw(accountId, amount);
                 return getCurrentPage().withInfo("Снято " + amount + " руб");
             }
         } catch (InsufficientFundsException e) {
             return getCurrentPage().withErrors(List.of(e.getMessage()));
         } catch (ServiceUnavailableException e) {
             return getCurrentPage().withErrors(List.of("Сервис временно недоступен"));
+        } catch (UnauthorizedException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Cash operation failed", e);
             return getCurrentPage().withErrors(List.of("Ошибка операции"));

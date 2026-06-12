@@ -7,11 +7,13 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 import ru.devinvader.bank.frontui.exception.*;
+import ru.devinvader.bank.frontui.mapper.FrontUiMapper;
 import ru.devinvader.bank.frontui.model.*;
 import ru.devinvader.bank.frontui.service.TokenProvider;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -32,7 +34,7 @@ class BankApiClientTest {
 
         var testBuilder = RestClient.builder();
         server = MockRestServiceServer.bindTo(testBuilder).build();
-        bankApiClient = new BankApiClient(tokenProvider, "localhost:8081", testBuilder);
+        bankApiClient = new BankApiClient(tokenProvider, "localhost:8081", testBuilder, new FrontUiMapper());
     }
 
     @Test
@@ -41,7 +43,7 @@ class BankApiClientTest {
                 .andExpect(method(org.springframework.http.HttpMethod.GET))
                 .andExpect(header("Authorization", "Bearer test-token"))
                 .andRespond(withSuccess("""
-                        {"login":"user1","name":"Иван","birthdate":"1990-01-01","balance":1000.00}
+                        {"accountId":"afd94176-3179-4285-9f6b-96fd9131628a","name":"Иван","birthdate":"1990-01-01","balance":1000.00}
                         """, MediaType.APPLICATION_JSON));
 
         var result = bankApiClient.getAccount();
@@ -73,12 +75,12 @@ class BankApiClientTest {
     void deposit_valid_shouldReturnResponse() {
         server.expect(requestTo("http://localhost:8081/api/cash/deposit"))
                 .andExpect(method(org.springframework.http.HttpMethod.POST))
-                .andExpect(content().json("{\"accountId\":\"user1\",\"amount\":100}"))
+                .andExpect(content().json("{\"amount\":100}"))
                 .andRespond(withSuccess("""
-                        {"accountId":"user1","newBalance":1100,"type":"DEPOSIT","amount":100}
+                        {"accountId":"afd94176-3179-4285-9f6b-96fd9131628a","newBalance":1100,"type":"DEPOSIT","amount":100}
                         """, MediaType.APPLICATION_JSON));
 
-        var result = bankApiClient.deposit("user1", BigDecimal.valueOf(100));
+        var result = bankApiClient.deposit(UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a"), BigDecimal.valueOf(100));
 
         assertThat(result.newBalance()).isEqualByComparingTo(BigDecimal.valueOf(1100));
     }
@@ -89,7 +91,7 @@ class BankApiClientTest {
                 .andExpect(method(org.springframework.http.HttpMethod.POST))
                 .andRespond(withBadRequest().body("Insufficient balance").contentType(MediaType.TEXT_PLAIN));
 
-        assertThatThrownBy(() -> bankApiClient.withdraw("user1", BigDecimal.valueOf(99999)))
+        assertThatThrownBy(() -> bankApiClient.withdraw(UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a"), BigDecimal.valueOf(99999)))
                 .isInstanceOf(InsufficientFundsException.class);
     }
 
@@ -99,15 +101,15 @@ class BankApiClientTest {
                 .andExpect(method(org.springframework.http.HttpMethod.POST))
                 .andRespond(withSuccess("""
                         {"id":"550e8400-e29b-41d4-a716-446655440000",
-                         "fromLogin":"user1","toLogin":"user2",
+                         "fromAccountId":"afd94176-3179-4285-9f6b-96fd9131628a","toAccountId":"447129a6-bf9b-4dcd-9b35-36d192bb525a",
                          "amount":50,"status":"COMPLETED","timestamp":"2025-01-01T00:00:00Z"}
                         """, MediaType.APPLICATION_JSON));
 
         var result = bankApiClient.transfer(
-                new TransferRequestDto("user2", BigDecimal.valueOf(50)));
+                new TransferRequestDto(UUID.fromString("447129a6-bf9b-4dcd-9b35-36d192bb525a"), BigDecimal.valueOf(50)));
 
         assertThat(result.status()).isEqualTo("COMPLETED");
-        assertThat(result.toLogin()).isEqualTo("user2");
+        assertThat(result.toAccountId()).isEqualTo(UUID.fromString("447129a6-bf9b-4dcd-9b35-36d192bb525a"));
     }
 
     @Test
@@ -115,12 +117,12 @@ class BankApiClientTest {
         server.expect(requestTo("http://localhost:8081/api/accounts/transfer-targets"))
                 .andExpect(method(org.springframework.http.HttpMethod.GET))
                 .andRespond(withSuccess("""
-                        [{"login":"user2","name":"Петр","birthdate":"1992-05-10","balance":500}]
+                        [{"accountId":"447129a6-bf9b-4dcd-9b35-36d192bb525a","name":"Петр","birthdate":"1992-05-10","balance":500}]
                         """, MediaType.APPLICATION_JSON));
 
         var result = bankApiClient.getTransferTargets();
 
         assertThat(result).hasSize(1);
-        assertThat(result.getFirst().login()).isEqualTo("user2");
+        assertThat(result.getFirst().accountId()).isEqualTo(UUID.fromString("447129a6-bf9b-4dcd-9b35-36d192bb525a"));
     }
 }

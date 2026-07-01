@@ -1,0 +1,9 @@
+spring:
+  config:
+    import: classpath:application-test-common.yaml
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.session.SessionAutoConfiguration
+  session:
+    store-type: none

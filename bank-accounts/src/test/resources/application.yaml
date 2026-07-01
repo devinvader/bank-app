@@ -1,0 +1,13 @@
+spring:
+  config:
+    import: classpath:application-test-common.yaml
+  application:
+    name: bank-accounts-test
+  datasource:
+    hikari:
+      connection-init-sql: SET search_path TO accounts,public
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    default-schema: accounts
+    liquibase-schema: public

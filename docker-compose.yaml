@@ -1,0 +1,225 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: bank-postgres
+    env_file: .env
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/01-init-schemas.sql
+    networks:
+      - bank-network
+    healthcheck: # случалось такое, что не работает из-за этого. Добавлю, хоть и по заданию вроде не надо
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: bank-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - bank-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  zookeeper:
+    image: zookeeper:3.9
+    container_name: bank-zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOO_4LW_COMMANDS_WHITELIST: "ruok"
+    networks:
+      - bank-network
+    healthcheck:
+      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: bank-keycloak
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?currentSchema=keycloak
+      KC_DB_USERNAME: ${DB_USERNAME}
+      KC_DB_PASSWORD: ${DB_PASSWORD}
+      KC_HOSTNAME: http://localhost:8089
+      KC_HTTP_PORT: ${KEYCLOAK_PORT}
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    command: start-dev --import-realm
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
+    ports:
+      - "${KEYCLOAK_PORT}:${KEYCLOAK_PORT}"
+    networks:
+      - bank-network
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/keycloak/${KEYCLOAK_PORT} && echo -e 'GET /realms/${KEYCLOAK_REALM}/.well-known/openid-configuration HTTP/1.0\\r\\nHost: keycloak\\r\\n\\r\\n' >&3 && cat <&3 | grep -q 'issuer'"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
+  bank-accounts:
+    build:
+      context: .
+      target: bank-accounts
+    container_name: bank-accounts
+    depends_on:
+      postgres:
+        condition: service_healthy
+      zookeeper:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      SERVER_PORT: 8082
+      DB_SCHEMA: accounts
+      DB_HOST: postgres
+      ZK_CONNECT_STRING: zookeeper:2181
+      REDIS_HOST: redis
+      KEYCLOAK_CLIENT_SECRET: accounts-secret
+      IMPORT_DEMO_DATA: ${IMPORT_DEMO_DATA:-false}
+    networks:
+      - bank-network
+
+  bank-cash:
+    build:
+      context: .
+      target: bank-cash
+    container_name: bank-cash
+    depends_on:
+      postgres:
+        condition: service_healthy
+      zookeeper:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      SERVER_PORT: 8083
+      DB_SCHEMA: cash
+      DB_HOST: postgres
+      ZK_CONNECT_STRING: zookeeper:2181
+      REDIS_HOST: redis
+      KEYCLOAK_CLIENT_SECRET: cash-secret
+    networks:
+      - bank-network
+
+  bank-transfer:
+    build:
+      context: .
+      target: bank-transfer
+    container_name: bank-transfer
+    depends_on:
+      postgres:
+        condition: service_healthy
+      zookeeper:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      SERVER_PORT: 8084
+      DB_SCHEMA: transfer
+      DB_HOST: postgres
+      ZK_CONNECT_STRING: zookeeper:2181
+      REDIS_HOST: redis
+      KEYCLOAK_CLIENT_SECRET: transfer-secret
+    networks:
+      - bank-network
+
+  bank-notifications:
+    build:
+      context: .
+      target: bank-notifications
+    container_name: bank-notifications
+    depends_on:
+      postgres:
+        condition: service_healthy
+      zookeeper:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      SERVER_PORT: 8085
+      DB_SCHEMA: notifications
+      DB_HOST: postgres
+      ZK_CONNECT_STRING: zookeeper:2181
+      REDIS_HOST: redis
+    networks:
+      - bank-network
+
+  bank-gateway:
+    build:
+      context: .
+      target: bank-gateway
+    container_name: bank-gateway
+    depends_on:
+      postgres:
+        condition: service_healthy
+      zookeeper:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      SERVER_PORT: 8081
+      DB_SCHEMA: gateway
+      DB_HOST: postgres
+      ZK_CONNECT_STRING: zookeeper:2181
+      REDIS_HOST: redis
+    networks:
+      - bank-network
+
+  bank-front-ui:
+    build:
+      context: .
+      target: bank-front-ui
+    container_name: bank-front-ui
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      zookeeper:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      SERVER_PORT: 8080
+      DB_HOST: postgres
+      ZK_CONNECT_STRING: zookeeper:2181
+      REDIS_HOST: redis
+    ports:
+      - "8080:8080"
+    networks:
+      - bank-network
+
+volumes:
+  postgres-data:
+
+networks:
+  bank-network:
+    driver: bridge

@@ -1,0 +1,31 @@
+{
+  "request": {
+    "method": "PUT",
+    "url": "/api/accounts/me",
+    "headers": {
+      "Authorization": {
+        "matches": "Bearer .*"
+      },
+      "Content-Type": {
+        "contains": "application/json"
+      }
+    },
+    "bodyPatterns": [
+      {
+        "matchesJsonPath": "$[?(@.name =~ /.*/i)]"
+      }
+    ]
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "accountId": "afd94176-3179-4285-9f6b-96fd9131628a",
+      "name": "Иван Иванов",
+      "birthdate": "1990-01-01",
+      "balance": 1000.00
+    }
+  }
+}

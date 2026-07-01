@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-add-id-default
+      author: devinvader
+      changes:
+        - addDefaultValue:
+            tableName: cash_operations
+            columnName: id
+            defaultValueComputed: gen_random_uuid()

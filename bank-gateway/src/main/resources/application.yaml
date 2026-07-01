@@ -1,0 +1,74 @@
+spring:
+  config:
+    import: "optional:zookeeper:"
+  application:
+    name: bank-gateway
+  cloud:
+    zookeeper:
+      connect-string: ${ZK_CONNECT_STRING:localhost:2181}
+      discovery:
+        instance-id: ${spring.application.name}:${server.port}
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+      default-filters: # SO
+        - DedupeResponseHeader=Access-Control-Allow-Origin
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "${FRONT_UI_ORIGIN:http://bank-front-ui:8080}"
+            allowedMethods: "GET,POST,PUT,DELETE"
+            allowedHeaders: "*"
+      httpclient:
+        connect-timeout: 2000
+        response-timeout: 10s
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://${KEYCLOAK_HOST:keycloak}:${KEYCLOAK_PORT:8089}/realms/${KEYCLOAK_REALM:bank}/protocol/openid-connect/certs
+
+resilience4j:
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 60s
+    instances:
+      accountsCircuitBreaker:
+        base-config: default
+      cashCircuitBreaker:
+        base-config: default
+      transferCircuitBreaker:
+        base-config: default
+      notificationsCircuitBreaker:
+        base-config: default
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+    instances:
+      accountsCircuitBreaker:
+        base-config: default
+      cashCircuitBreaker:
+        base-config: default
+      transferCircuitBreaker:
+        base-config: default
+      notificationsCircuitBreaker:
+        base-config: default
+
+management:
+  endpoint:
+    gateway:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+
+server:
+  port: ${SERVER_PORT:8081}

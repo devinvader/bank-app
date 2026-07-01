@@ -1,0 +1,78 @@
+spring:
+  config:
+    import: "optional:zookeeper:"
+  http:
+    client:
+      connect-timeout: 5s
+      read-timeout: 30s
+  application:
+    name: bank-front-ui
+  session:
+    store-type: redis
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  cloud:
+    zookeeper:
+      connect-string: ${ZK_CONNECT_STRING:localhost:2181}
+      discovery:
+        instance-id: ${spring.application.name}:${server.port}
+      config:
+        watcher:
+          enabled: false
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: bank-front-ui
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:}
+            client-authentication-method: none
+            authorization-grant-type: authorization_code
+            scope: openid, profile, accounts:read, accounts:write, cash:operate, transfer:execute
+            redirect-uri: "{baseUrl}/login/oauth2/code/keycloak"
+        provider:
+          keycloak:
+            authorization-uri: ${KEYCLOAK_EXTERNAL_URL:http://localhost:8089}/realms/${KEYCLOAK_REALM:bank}/protocol/openid-connect/auth
+            token-uri: http://${KEYCLOAK_HOST:keycloak}:${KEYCLOAK_PORT:8089}/realms/${KEYCLOAK_REALM:bank}/protocol/openid-connect/token
+            user-info-uri: http://${KEYCLOAK_HOST:keycloak}:${KEYCLOAK_PORT:8089}/realms/${KEYCLOAK_REALM:bank}/protocol/openid-connect/userinfo
+            jwk-set-uri: http://${KEYCLOAK_HOST:keycloak}:${KEYCLOAK_PORT:8089}/realms/${KEYCLOAK_REALM:bank}/protocol/openid-connect/certs
+            end-session-endpoint: ${KEYCLOAK_EXTERNAL_URL:http://localhost:8089}/realms/${KEYCLOAK_REALM:bank}/protocol/openid-connect/logout
+            user-name-attribute: sub
+
+gateway:
+  service-id: bank-gateway
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+    instances:
+      accountsGateway:
+        base-config: default
+      cashGateway:
+        base-config: default
+        ignore-exceptions:
+          - ru.devinvader.bank.frontui.exception.InsufficientFundsException
+          - ru.devinvader.bank.frontui.exception.BadRequestException
+          - ru.devinvader.bank.frontui.exception.UnauthorizedException
+      transferGateway:
+        base-config: default
+        ignore-exceptions:
+          - ru.devinvader.bank.frontui.exception.InsufficientFundsException
+          - ru.devinvader.bank.frontui.exception.BadRequestException
+          - ru.devinvader.bank.frontui.exception.UnauthorizedException
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+server:
+  port: ${SERVER_PORT:8080}

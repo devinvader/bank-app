@@ -1,0 +1,11 @@
+spring:
+  config:
+    import: classpath:application-test-common.yaml
+  datasource:
+    hikari:
+      connection-init-sql: SET search_path TO transfer,public
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    default-schema: transfer
+    liquibase-schema: public

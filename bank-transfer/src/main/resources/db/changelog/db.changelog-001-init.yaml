@@ -1,0 +1,60 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-transfer-schema
+      author: devinvader
+      changes:
+        - sql:
+            sql: CREATE SCHEMA IF NOT EXISTS transfer
+  - changeSet:
+      id: 001-create-transfers-table
+      author: devinvader
+      changes:
+        - createTable:
+            tableName: transfers
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: from_account
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: to_account
+                  type: UUID
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount
+                  type: DECIMAL(19, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: completed_at
+                  type: TIMESTAMP
+        - createIndex:
+            indexName: idx_transfers_status
+            tableName: transfers
+            columns:
+              - column:
+                  name: status
+        - createIndex:
+            indexName: idx_transfers_from
+            tableName: transfers
+            columns:
+              - column:
+                  name: from_account

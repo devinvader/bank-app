@@ -1,0 +1,34 @@
+spring:
+  config:
+    import: "optional:zookeeper:"
+  application:
+    name: bank-notifications
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:bank}?currentSchema=notifications
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+  cloud:
+    zookeeper:
+      connect-string: ${ZK_CONNECT_STRING:localhost:2181}
+      discovery:
+        instance-id: ${spring.application.name}:${server.port}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://${KEYCLOAK_HOST:keycloak}:${KEYCLOAK_PORT:8089}/realms/${KEYCLOAK_REALM:bank}/protocol/openid-connect/certs
+
+outbox:
+  scheduler:
+    interval: 5000
+
+server:
+  port: ${SERVER_PORT:8085}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

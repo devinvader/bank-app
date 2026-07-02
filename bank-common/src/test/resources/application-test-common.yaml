@@ -3,15 +3,6 @@ spring:
     exclude:
       - org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientAutoConfiguration
       - org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientServletAutoConfiguration
-      - org.springframework.cloud.zookeeper.ZookeeperAutoConfiguration
-      - org.springframework.cloud.zookeeper.discovery.ZookeeperDiscoveryAutoConfiguration
-  cloud:
-    zookeeper:
-      enabled: false
-      discovery:
-        enabled: false
-      config:
-        enabled: false
 
 resilience4j:
   circuitbreaker:

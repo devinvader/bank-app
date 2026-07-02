@@ -8,7 +8,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager;
@@ -40,7 +39,6 @@ public class WebClientAutoConfiguration {
     }
 
     @Bean
-    @LoadBalanced
     @ConditionalOnMissingBean
     public WebClient.Builder webClientBuilder(
             ObjectProvider<OAuth2AuthorizedClientManager> authorizedClientManagerProvider) {

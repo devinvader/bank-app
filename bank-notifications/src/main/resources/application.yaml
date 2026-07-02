@@ -1,6 +1,4 @@
 spring:
-  config:
-    import: "optional:zookeeper:"
   application:
     name: bank-notifications
   datasource:
@@ -9,11 +7,8 @@ spring:
     password: ${DB_PASSWORD:postgres}
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
-  cloud:
-    zookeeper:
-      connect-string: ${ZK_CONNECT_STRING:localhost:2181}
-      discovery:
-        instance-id: ${spring.application.name}:${server.port}
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
   security:
     oauth2:
       resourceserver:
@@ -26,8 +21,18 @@ outbox:
 
 server:
   port: ${SERVER_PORT:8085}
+  shutdown: graceful
 
 management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  health:
+    readinessstate:
+      enabled: true
+    livenessstate:
+      enabled: true
   endpoints:
     web:
       exposure:

@@ -1,18 +1,11 @@
 spring:
-  config:
-    import: "optional:zookeeper:"
   application:
     name: bank-gateway
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
   cloud:
-    zookeeper:
-      connect-string: ${ZK_CONNECT_STRING:localhost:2181}
-      discovery:
-        instance-id: ${spring.application.name}:${server.port}
     gateway:
-      discovery:
-        locator:
-          enabled: false
-      default-filters: # SO
+      default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin
       globalcors:
         cors-configurations:
@@ -72,3 +65,15 @@ management:
 
 server:
   port: ${SERVER_PORT:8081}
+  shutdown: graceful
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  health:
+    readinessstate:
+      enabled: true
+    livenessstate:
+      enabled: true

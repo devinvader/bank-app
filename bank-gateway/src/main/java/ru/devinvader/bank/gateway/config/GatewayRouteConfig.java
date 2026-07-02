@@ -20,7 +20,7 @@ public class GatewayRouteConfig {
                                         .setStatuses(HttpStatus.BAD_GATEWAY,
                                                 HttpStatus.GATEWAY_TIMEOUT,
                                                 HttpStatus.SERVICE_UNAVAILABLE)))
-                        .uri("lb://bank-accounts"))
+                        .uri("http://bank-accounts"))
                 .route("cash", r -> r.path("/api/cash/**")
                         .filters(f -> f
                                 .circuitBreaker(c -> c.setName("cashCircuitBreaker")
@@ -29,7 +29,7 @@ public class GatewayRouteConfig {
                                         .setStatuses(HttpStatus.BAD_GATEWAY,
                                                 HttpStatus.GATEWAY_TIMEOUT,
                                                 HttpStatus.SERVICE_UNAVAILABLE)))
-                        .uri("lb://bank-cash"))
+                        .uri("http://bank-cash"))
                 .route("transfer", r -> r.path("/api/transfer/**")
                         .filters(f -> f
                                 .circuitBreaker(c -> c.setName("transferCircuitBreaker")
@@ -38,7 +38,7 @@ public class GatewayRouteConfig {
                                         .setStatuses(HttpStatus.BAD_GATEWAY,
                                                 HttpStatus.GATEWAY_TIMEOUT,
                                                 HttpStatus.SERVICE_UNAVAILABLE)))
-                        .uri("lb://bank-transfer"))
+                        .uri("http://bank-transfer"))
                 .build();
     }
 }

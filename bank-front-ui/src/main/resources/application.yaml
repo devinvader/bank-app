@@ -1,6 +1,4 @@
 spring:
-  config:
-    import: "optional:zookeeper:"
   http:
     client:
       connect-timeout: 5s
@@ -13,14 +11,8 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-  cloud:
-    zookeeper:
-      connect-string: ${ZK_CONNECT_STRING:localhost:2181}
-      discovery:
-        instance-id: ${spring.application.name}:${server.port}
-      config:
-        watcher:
-          enabled: false
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
   security:
     oauth2:
       client:
@@ -76,3 +68,15 @@ management:
 
 server:
   port: ${SERVER_PORT:8080}
+  shutdown: graceful
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  health:
+    readinessstate:
+      enabled: true
+    livenessstate:
+      enabled: true

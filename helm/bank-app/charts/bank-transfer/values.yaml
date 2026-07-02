@@ -1,0 +1,26 @@
+replicaCount: 1
+image:
+  repository: bank-transfer
+  tag: latest
+  pullPolicy: IfNotPresent
+service:
+  name: bank-transfer
+  port: 80
+  targetPort: 8084
+config:
+  data:
+    SERVER_PORT: "8084"
+    DB_HOST: postgres
+    DB_PORT: "5432"
+    DB_NAME: bank
+    DB_USERNAME: postgres
+    SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/bank?currentSchema=transfer"
+    KEYCLOAK_HOST: keycloak
+    KEYCLOAK_PORT: "8089"
+    KEYCLOAK_REALM: bank
+    ACCOUNTS_BASE_URL: "http://bank-accounts"
+    NOTIFICATIONS_BASE_URL: "http://bank-notifications"
+secret:
+  data:
+    DB_PASSWORD: postgres
+    KEYCLOAK_CLIENT_SECRET: transfer-secret

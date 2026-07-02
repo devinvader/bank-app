@@ -1,0 +1,9 @@
+{{ include "microservice.deployment" . }}
+---
+{{ include "microservice.service" . }}
+---
+{{ include "microservice.configmap" . }}
+---
+{{ include "microservice.secret" . }}
+---
+{{ include "microservice.test" . }}

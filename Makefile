@@ -1,4 +1,4 @@
-.PHONY: cluster-up cluster-down deploy build clean
+.PHONY: cluster-up cluster-down deploy build port-forward clean
 
 CLUSTER_NAME ?= bank-dev
 HELM_CHART ?= ./helm/bank-app
@@ -23,6 +23,10 @@ deploy: build
 	helm upgrade --install bank-app $(HELM_CHART) \
 		--namespace $(NAMESPACE) --create-namespace \
 		--wait --timeout 10m
+
+port-forward:
+	kubectl port-forward -n $(NAMESPACE) svc/keycloak 8089:80 &
+	kubectl port-forward -n $(NAMESPACE) svc/bank-front-ui 8080:80 &
 
 clean:
 	helm uninstall bank-app -n $(NAMESPACE) || true

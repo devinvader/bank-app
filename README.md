@@ -74,7 +74,8 @@ docker compose down -v
 ## Быстрый старт
 
 ```bash
-make cluster-up && make deploy
+# Разово: кластер + деплой + проброс портов
+make cluster-up && make deploy && make port-forward
 ```
 
 ## Работа с Helm-чартами
@@ -123,6 +124,7 @@ helm/bank-app/
 │   ├── _helpers.tpl
 │   └── ingress.yaml - Ingress для внешнего доступа
 └── charts/
+    ├── microservice-lib/ - Library chart
     ├── postgres/ - PostgreSQL (StatefulSet)
     ├── redis/ - Redis
     ├── keycloak/ - Keycloak
@@ -133,6 +135,11 @@ helm/bank-app/
     ├── bank-notifications/
     └── bank-front-ui/
 ```
+
+
+Шаблоны всех 6 микросервисов вынесены в `microservice-lib`.
+Каждый сабчарт содержит 3 файла: `Chart.yaml` с зависимостью от library, `values.yaml` с конфигурацией для конкретного микросервиса и `templates/all.yaml` для подключения шаблонов.
+При добавлении нового микросервиса достаточно скопировать соседний сабчарт и изменить `values.yaml`, а также добавить в корневой values.yaml конфигурацию.
 
 ## Переменные окружения
 

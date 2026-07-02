@@ -1,0 +1,9 @@
+global:
+  image:
+    tag: latest
+    pullPolicy: IfNotPresent
+
+keycloak:
+  secrets:
+    adminUsername: admin
+    adminPassword: admin

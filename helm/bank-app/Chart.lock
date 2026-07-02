@@ -1,0 +1,33 @@
+dependencies:
+- name: microservice-lib
+  repository: ""
+  version: 0.1.0
+- name: postgres
+  repository: ""
+  version: 0.1.0
+- name: redis
+  repository: ""
+  version: 0.1.0
+- name: keycloak
+  repository: ""
+  version: 0.1.0
+- name: bank-accounts
+  repository: ""
+  version: 0.1.0
+- name: bank-cash
+  repository: ""
+  version: 0.1.0
+- name: bank-transfer
+  repository: ""
+  version: 0.1.0
+- name: bank-notifications
+  repository: ""
+  version: 0.1.0
+- name: bank-gateway
+  repository: ""
+  version: 0.1.0
+- name: bank-front-ui
+  repository: ""
+  version: 0.1.0
+digest: sha256:66fe81a81ba57a4979b5f22f91588e45a60b1c010fded2bb490750745ca9099b
+generated: "2026-07-02T11:50:05.481075252+03:00"

@@ -1,0 +1,8 @@
+global:
+  image:
+    tag: latest
+
+keycloak:
+  secrets:
+    adminUsername: admin
+    adminPassword: admin

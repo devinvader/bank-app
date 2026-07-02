@@ -1,0 +1,19 @@
+replicaCount: 1
+image:
+  repository: quay.io/keycloak/keycloak
+  tag: latest
+service:
+  name: keycloak
+  port: 80
+  targetPort: 8089
+config:
+  realm: bank
+  externalUrl: "http://localhost:8089"
+  dbHost: postgres
+  dbPort: "5432"
+  dbName: bank
+  dbUsername: postgres
+secrets:
+  adminUsername: admin
+  adminPassword: admin
+  dbPassword: postgres

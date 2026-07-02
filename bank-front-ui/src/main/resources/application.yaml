@@ -61,16 +61,6 @@ resilience4j:
           - ru.devinvader.bank.frontui.exception.UnauthorizedException
 
 management:
-  endpoints:
-    web:
-      exposure:
-        include: health
-
-server:
-  port: ${SERVER_PORT:8080}
-  shutdown: graceful
-
-management:
   endpoint:
     health:
       probes:
@@ -80,3 +70,11 @@ management:
       enabled: true
     livenessstate:
       enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful

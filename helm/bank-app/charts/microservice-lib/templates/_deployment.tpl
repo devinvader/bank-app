@@ -41,13 +41,13 @@ spec:
             failureThreshold: 30
           readinessProbe:
             httpGet:
-              path: /actuator/health/readiness
+              path: /actuator/health
               port: {{ .Values.service.targetPort }}
             initialDelaySeconds: 10
             periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /actuator/health/liveness
+              path: /actuator/health
               port: {{ .Values.service.targetPort }}
             initialDelaySeconds: 30
             periodSeconds: 20

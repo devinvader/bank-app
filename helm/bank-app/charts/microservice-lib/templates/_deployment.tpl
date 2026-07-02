@@ -36,8 +36,8 @@ spec:
             httpGet:
               path: /actuator/health
               port: {{ .Values.service.targetPort }}
-            initialDelaySeconds: 15
-            periodSeconds: 5
+            initialDelaySeconds: 20
+            periodSeconds: 10
             failureThreshold: 30
           readinessProbe:
             httpGet:

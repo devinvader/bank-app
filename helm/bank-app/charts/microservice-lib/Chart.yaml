@@ -1,0 +1,5 @@
+apiVersion: v2
+name: microservice-lib
+description: Общий чарт-либа для микросервисов
+type: library
+version: 0.1.0

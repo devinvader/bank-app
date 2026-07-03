@@ -23,7 +23,7 @@ spring:
             client-authentication-method: none
             authorization-grant-type: authorization_code
             scope: openid, profile, accounts:read, accounts:write, cash:operate, transfer:execute
-            redirect-uri: "{baseUrl}/login/oauth2/code/keycloak"
+            redirect-uri: "${APP_BASE_URL:http://localhost:8080}/login/oauth2/code/keycloak"
         provider:
           keycloak:
             authorization-uri: ${KEYCLOAK_EXTERNAL_URL:http://localhost:8089}/realms/${KEYCLOAK_REALM:bank}/protocol/openid-connect/auth

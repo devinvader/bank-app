@@ -53,7 +53,6 @@ keycloak:
     targetPort: 8089
   config:
     realm: bank
-    externalUrl: "http://localhost:8089"
     dbHost: postgres
     dbPort: "5432"
     dbName: bank
@@ -139,6 +138,8 @@ bank-gateway:
   config:
     data:
       FRONT_UI_ORIGIN: "http://localhost"
+      KEYCLOAK_HOST: keycloak
+      KEYCLOAK_PORT: "80"
 
 bank-front-ui:
   enabled: true
@@ -153,3 +154,5 @@ bank-front-ui:
     data:
       GATEWAY_SERVICE_ID: bank-gateway
       KEYCLOAK_EXTERNAL_URL: "http://localhost:8089"
+      KEYCLOAK_HOST: keycloak
+      KEYCLOAK_PORT: "80"

@@ -8,7 +8,6 @@ service:
   targetPort: 8089
 config:
   realm: bank
-  externalUrl: "http://localhost:8089"
   dbHost: postgres
   dbPort: "5432"
   dbName: bank

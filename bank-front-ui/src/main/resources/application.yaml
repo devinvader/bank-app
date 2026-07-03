@@ -28,7 +28,6 @@ spring:
           keycloak:
             authorization-uri: ${KEYCLOAK_EXTERNAL_URL:http://localhost:8089}/realms/${KEYCLOAK_REALM:bank}/protocol/openid-connect/auth
             token-uri: http://${KEYCLOAK_HOST:keycloak}:${KEYCLOAK_PORT:8089}/realms/${KEYCLOAK_REALM:bank}/protocol/openid-connect/token
-            user-info-uri: http://${KEYCLOAK_HOST:keycloak}:${KEYCLOAK_PORT:8089}/realms/${KEYCLOAK_REALM:bank}/protocol/openid-connect/userinfo
             jwk-set-uri: http://${KEYCLOAK_HOST:keycloak}:${KEYCLOAK_PORT:8089}/realms/${KEYCLOAK_REALM:bank}/protocol/openid-connect/certs
             end-session-endpoint: ${KEYCLOAK_EXTERNAL_URL:http://localhost:8089}/realms/${KEYCLOAK_REALM:bank}/protocol/openid-connect/logout
             user-name-attribute: sub
@@ -74,6 +73,14 @@ management:
     web:
       exposure:
         include: health
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
+    ru.devinvader.bank.frontui.config: DEBUG
+    org.springframework.web.client.RestClient: DEBUG
+    org.apache.catalina: WARN
 
 server:
   port: ${SERVER_PORT:8080}

@@ -38,8 +38,8 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.service.name }}-secret
                   key: db-password
-            - name: KC_HOSTNAME_URL
-              value: {{ .Values.config.externalUrl | quote }}
+            - name: KC_HOSTNAME_STRICT
+              value: "false"
             - name: KEYCLOAK_ADMIN
               value: {{ .Values.secrets.adminUsername | quote }}
             - name: KEYCLOAK_ADMIN_PASSWORD

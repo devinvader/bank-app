@@ -152,7 +152,8 @@ bank-front-ui:
     targetPort: 8080
   config:
     data:
+      APP_BASE_URL: "http://localhost"
       GATEWAY_SERVICE_ID: bank-gateway
-      KEYCLOAK_EXTERNAL_URL: "http://localhost:8089"
+      KEYCLOAK_EXTERNAL_URL: "http://localhost"
       KEYCLOAK_HOST: keycloak
       KEYCLOAK_PORT: "80"

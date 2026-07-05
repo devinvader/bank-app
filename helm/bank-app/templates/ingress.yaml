@@ -21,7 +21,28 @@ spec:
                 name: {{ index .Values "bank-front-ui" "service" "name" }}
                 port:
                   number: {{ index .Values "bank-front-ui" "service" "port" }}
-          - path: /auth
+          - path: /realms
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.keycloak.service.name }}
+                port:
+                  number: {{ .Values.keycloak.service.port }}
+          - path: /resources
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.keycloak.service.name }}
+                port:
+                  number: {{ .Values.keycloak.service.port }}
+          - path: /admin
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.keycloak.service.name }}
+                port:
+                  number: {{ .Values.keycloak.service.port }}
+          - path: /js
             pathType: Prefix
             backend:
               service:

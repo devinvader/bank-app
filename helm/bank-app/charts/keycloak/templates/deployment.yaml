@@ -47,6 +47,10 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.service.name }}-secret
                   key: admin-password
+            - name: JAVA_OPTS_APPEND
+              value: {{ .Values.config.javaOpts | quote }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
             - name: realm-import
               mountPath: /opt/keycloak/data/import/realm-export.json

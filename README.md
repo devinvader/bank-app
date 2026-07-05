@@ -45,8 +45,8 @@ docker compose up --build -d
 ```
 
 После запуска:
-- Приложение доступно: http://localhost:8080
-- Keycloak Admin: http://localhost:8089 (admin/admin)
+- Приложение доступно: http://localhost:8080 (если разворачивать в kind - http://localhost)
+- Keycloak Admin: http://localhost:8089 (admin/admin) (если разворачивать в kind - http://localhost/admin, http://localhost/realms)
 - При первом запуске Keycloak импортирует realm из keycloak/realm-export.json
 - Регистрация новых пользователей совершается на стороне keycloak (например, при помощи вставки администратором)
 - В .env можно изменить большинство переменных среды.
@@ -74,8 +74,7 @@ docker compose down -v
 ## Быстрый старт
 
 ```bash
-# Разово: кластер + деплой + проброс портов
-make cluster-up && make deploy && make port-forward
+make cluster-up && make deploy
 ```
 
 ## Работа с Helm-чартами

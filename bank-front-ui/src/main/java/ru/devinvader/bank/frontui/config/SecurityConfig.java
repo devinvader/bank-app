@@ -2,7 +2,7 @@ package ru.devinvader.bank.frontui.config;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,9 +10,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
@@ -28,7 +26,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
 
-@Slf4j
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -45,7 +42,6 @@ public class SecurityConfig {
         return new OidcUserService() {
             @Override
             public OidcUser loadUser(OidcUserRequest userRequest) throws org.springframework.security.oauth2.core.OAuth2AuthenticationException {
-                log.info("Using ID token claims directly (UserInfo call skipped)");
                 var idToken = userRequest.getIdToken();
                 Set<SimpleGrantedAuthority> authorities = new HashSet<>(userRequest.getAccessToken().getScopes().stream()
                         .map(s -> new SimpleGrantedAuthority("SCOPE_" + s))
@@ -78,16 +74,6 @@ public class SecurityConfig {
     @Bean
     public AuthenticationSuccessHandler oauth2SuccessHandler() {
         return (request, response, auth) -> {
-            log.info("OAuth2 login SUCCESS: principal={}, authorities={}",
-                    auth.getName(), auth.getAuthorities());
-            if (auth instanceof OAuth2AuthenticationToken token) {
-                log.info("OAuth2 token: authorizedClientRegId={}, nameAttributeKey={}",
-                        token.getAuthorizedClientRegistrationId(),
-                        token.getPrincipal().getName());
-                if (token.getPrincipal() instanceof DefaultOidcUser oidcUser) {
-                    log.info("OIDC user: claims={}", oidcUser.getClaims());
-                }
-            }
             response.sendRedirect("/account");
         };
     }
@@ -95,15 +81,6 @@ public class SecurityConfig {
     @Bean
     public AuthenticationFailureHandler oauth2FailureHandler() {
         return (request, response, exception) -> {
-            log.error("OAuth2 login FAILED: error={}, type={}, message={}",
-                    exception.getClass().getSimpleName(),
-                    (exception instanceof AuthenticationException ae ? ae.getMessage() : "N/A"),
-                    exception.getMessage());
-            Throwable cause = exception.getCause();
-            while (cause != null) {
-                log.error("  caused by: {}: {}", cause.getClass().getName(), cause.getMessage());
-                cause = cause.getCause();
-            }
             request.getSession().setAttribute("loginError", exception.getMessage());
             response.sendRedirect("/login-error");
         };

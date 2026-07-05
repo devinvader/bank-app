@@ -75,7 +75,3 @@ server:
   port: ${SERVER_PORT:8081}
   shutdown: graceful
 
-logging:
-  level:
-    org.springframework.security: DEBUG
-    org.springframework.security.oauth2: DEBUG

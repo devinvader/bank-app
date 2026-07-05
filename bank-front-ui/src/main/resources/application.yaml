@@ -74,14 +74,6 @@ management:
       exposure:
         include: health
 
-logging:
-  level:
-    org.springframework.security: DEBUG
-    org.springframework.security.oauth2: DEBUG
-    ru.devinvader.bank.frontui.config: DEBUG
-    org.springframework.web.client.RestClient: DEBUG
-    org.apache.catalina: WARN
-
 server:
   port: ${SERVER_PORT:8080}
   shutdown: graceful

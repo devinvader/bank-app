@@ -1,0 +1,23 @@
+replicaCount: 1
+image:
+  repository: bank-notifications
+  tag: latest
+  pullPolicy: IfNotPresent
+service:
+  name: bank-notifications
+  port: 80
+  targetPort: 8085
+config:
+  data:
+    SERVER_PORT: "8085"
+    DB_HOST: postgres
+    DB_PORT: "5432"
+    DB_NAME: bank
+    DB_USERNAME: postgres
+    SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/bank?currentSchema=notifications"
+    KEYCLOAK_HOST: keycloak
+    KEYCLOAK_PORT: "80"
+    KEYCLOAK_REALM: bank
+secret:
+  data:
+    DB_PASSWORD: postgres

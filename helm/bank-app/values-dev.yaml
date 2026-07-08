@@ -1,0 +1,14 @@
+global:
+  image:
+    tag: latest
+    pullPolicy: IfNotPresent
+
+bank-accounts:
+  config:
+    data:
+      IMPORT_DEMO_DATA: "true"
+
+keycloak:
+  secrets:
+    adminUsername: admin
+    adminPassword: admin

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.service.name }}-init
+  labels:
+    app: {{ .Release.Name }}-postgres
+data:
+  init-db.sql: |
+    CREATE SCHEMA IF NOT EXISTS keycloak;
+    CREATE SCHEMA IF NOT EXISTS accounts;
+    CREATE SCHEMA IF NOT EXISTS cash;
+    CREATE SCHEMA IF NOT EXISTS transfer;
+    CREATE SCHEMA IF NOT EXISTS notifications;
+    CREATE SCHEMA IF NOT EXISTS gateway;

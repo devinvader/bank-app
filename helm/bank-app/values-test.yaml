@@ -1,0 +1,13 @@
+global:
+  image:
+    tag: latest
+
+bank-accounts:
+  config:
+    data:
+      IMPORT_DEMO_DATA: "true"
+
+keycloak:
+  secrets:
+    adminUsername: admin
+    adminPassword: admin

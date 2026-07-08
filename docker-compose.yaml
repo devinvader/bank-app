@@ -33,21 +33,6 @@ services:
       timeout: 5s
       retries: 5
 
-  zookeeper:
-    image: zookeeper:3.9
-    container_name: bank-zookeeper
-    ports:
-      - "2181:2181"
-    environment:
-      ZOO_4LW_COMMANDS_WHITELIST: "ruok"
-    networks:
-      - bank-network
-    healthcheck:
-      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   keycloak:
     image: quay.io/keycloak/keycloak:latest
     container_name: bank-keycloak
@@ -86,8 +71,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      zookeeper:
-        condition: service_healthy
       keycloak:
         condition: service_healthy
     env_file: .env
@@ -95,7 +78,6 @@ services:
       SERVER_PORT: 8082
       DB_SCHEMA: accounts
       DB_HOST: postgres
-      ZK_CONNECT_STRING: zookeeper:2181
       REDIS_HOST: redis
       KEYCLOAK_CLIENT_SECRET: accounts-secret
       IMPORT_DEMO_DATA: ${IMPORT_DEMO_DATA:-false}
@@ -110,8 +92,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      zookeeper:
-        condition: service_healthy
       keycloak:
         condition: service_healthy
     env_file: .env
@@ -119,7 +99,6 @@ services:
       SERVER_PORT: 8083
       DB_SCHEMA: cash
       DB_HOST: postgres
-      ZK_CONNECT_STRING: zookeeper:2181
       REDIS_HOST: redis
       KEYCLOAK_CLIENT_SECRET: cash-secret
     networks:
@@ -133,8 +112,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      zookeeper:
-        condition: service_healthy
       keycloak:
         condition: service_healthy
     env_file: .env
@@ -142,7 +119,6 @@ services:
       SERVER_PORT: 8084
       DB_SCHEMA: transfer
       DB_HOST: postgres
-      ZK_CONNECT_STRING: zookeeper:2181
       REDIS_HOST: redis
       KEYCLOAK_CLIENT_SECRET: transfer-secret
     networks:
@@ -156,8 +132,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      zookeeper:
-        condition: service_healthy
       keycloak:
         condition: service_healthy
     env_file: .env
@@ -165,7 +139,6 @@ services:
       SERVER_PORT: 8085
       DB_SCHEMA: notifications
       DB_HOST: postgres
-      ZK_CONNECT_STRING: zookeeper:2181
       REDIS_HOST: redis
     networks:
       - bank-network
@@ -178,8 +151,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      zookeeper:
-        condition: service_healthy
       keycloak:
         condition: service_healthy
     env_file: .env
@@ -187,7 +158,6 @@ services:
       SERVER_PORT: 8081
       DB_SCHEMA: gateway
       DB_HOST: postgres
-      ZK_CONNECT_STRING: zookeeper:2181
       REDIS_HOST: redis
     networks:
       - bank-network
@@ -202,15 +172,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      zookeeper:
-        condition: service_healthy
       keycloak:
         condition: service_healthy
     env_file: .env
     environment:
       SERVER_PORT: 8080
       DB_HOST: postgres
-      ZK_CONNECT_STRING: zookeeper:2181
       REDIS_HOST: redis
     ports:
       - "8080:8080"

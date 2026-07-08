@@ -1,0 +1,20 @@
+replicaCount: 1
+image:
+  repository: bank-front-ui
+  tag: latest
+  pullPolicy: IfNotPresent
+service:
+  name: bank-front-ui
+  port: 80
+  targetPort: 8080
+config:
+  data:
+    SERVER_PORT: "8080"
+    GATEWAY_SERVICE_ID: bank-gateway
+    APP_BASE_URL: "http://localhost:8080"
+    REDIS_HOST: redis
+    REDIS_PORT: "6379"
+    KEYCLOAK_HOST: keycloak
+    KEYCLOAK_PORT: "80"
+    KEYCLOAK_REALM: bank
+    KEYCLOAK_EXTERNAL_URL: "http://localhost:8089"

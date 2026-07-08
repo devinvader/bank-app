@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ .Values.service.name }}-test"
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: test
+      image: redis:7-alpine
+      command:
+        - redis-cli
+        - -h
+        - {{ .Values.service.name }}
+        - ping
+  restartPolicy: Never

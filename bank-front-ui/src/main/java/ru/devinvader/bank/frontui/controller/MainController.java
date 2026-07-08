@@ -1,5 +1,6 @@
 package ru.devinvader.bank.frontui.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
@@ -31,6 +32,14 @@ public class MainController {
     private final AccountFrontService accountFrontService;
     private final CashFrontService cashFrontService;
     private final TransferFrontService transferFrontService;
+
+    @GetMapping("/login-error")
+    public String loginError(HttpServletRequest request, Model model) {
+        Object err = request.getSession().getAttribute("loginError");
+        model.addAttribute("loginError", err != null ? err.toString() : "Неизвестная ошибка");
+        if (err != null) request.getSession().removeAttribute("loginError");
+        return "login-error";
+    }
 
     @GetMapping
     public String index() {

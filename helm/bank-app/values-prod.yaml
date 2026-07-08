@@ -1,0 +1,26 @@
+global:
+  image:
+    tag: stable
+    pullPolicy: Always
+
+bank-accounts:
+  replicaCount: 2
+  config:
+    data:
+      IMPORT_DEMO_DATA: "false"
+
+bank-cash:
+  replicaCount: 2
+
+bank-transfer:
+  replicaCount: 2
+
+bank-gateway:
+  replicaCount: 2
+
+bank-front-ui:
+  replicaCount: 2
+
+postgres:
+  storage:
+    size: 10Gi

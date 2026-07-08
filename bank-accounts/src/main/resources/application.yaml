@@ -1,6 +1,4 @@
 spring:
-  config:
-    import: "optional:zookeeper:"
   application:
     name: bank-accounts
   datasource:
@@ -10,11 +8,8 @@ spring:
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
     contexts: ${IMPORT_DEMO_DATA:false}
-  cloud:
-    zookeeper:
-      connect-string: ${ZK_CONNECT_STRING:localhost:2181}
-      discovery:
-        instance-id: ${spring.application.name}:${server.port}
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
   security:
     oauth2:
       resourceserver:
@@ -45,8 +40,18 @@ resilience4j:
 
 server:
   port: ${SERVER_PORT:8082}
+  shutdown: graceful
 
 management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  health:
+    readinessstate:
+      enabled: true
+    livenessstate:
+      enabled: true
   endpoints:
     web:
       exposure:

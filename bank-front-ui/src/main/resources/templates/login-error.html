@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>Ошибка входа - Банк</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container p-5">
+    <div class="alert alert-danger">
+        <h4>Ошибка аутентификации</h4>
+        <p th:if="${loginError}" th:text="'Причина: ' + ${loginError}" class="text-muted small"/>
+    </div>
+    <a href="/oauth2/authorization/keycloak" class="btn btn-primary">Попробовать снова</a>
+    <a href="/" class="btn btn-secondary">На главную</a>
+</div>
+</body>
+</html>

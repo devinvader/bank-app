@@ -1,0 +1,15 @@
+replicaCount: 1
+image:
+  repository: postgres
+  tag: "15"
+service:
+  name: postgres
+  port: 5432
+storage:
+  size: 1Gi
+  storageClass: ""
+config:
+  database: bank
+  username: postgres
+secrets:
+  password: postgres

@@ -9,15 +9,19 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.yaml
   lifecycle:
     timeout-per-shutdown-phase: 30s
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          jwk-set-uri: http://${KEYCLOAK_HOST:keycloak}:${KEYCLOAK_PORT:8089}/realms/${KEYCLOAK_REALM:bank}/protocol/openid-connect/certs
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: notifications-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: ru.devinvader.bank.common.config.NotificationDeserializer
+    listener:
+      ack-mode: record
 
-outbox:
-  scheduler:
-    interval: 5000
+kafka:
+  topic:
+    notifications: ${KAFKA_TOPIC_NOTIFICATIONS:notifications}
 
 server:
   port: ${SERVER_PORT:8085}

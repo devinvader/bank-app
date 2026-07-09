@@ -5,11 +5,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import ru.devinvader.bank.commontest.config.AbstractTestcontainersConfiguration;
-import ru.devinvader.bank.notifications.config.TestSecurityConfig;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Import({TestSecurityConfig.class, AbstractTestcontainersConfiguration.class})
+@Import(AbstractTestcontainersConfiguration.class)
 class BankNotificationsApplicationTests {
     @Test
     void contextLoads_shouldLoadApplicationContext() {

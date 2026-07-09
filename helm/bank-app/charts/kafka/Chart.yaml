@@ -1,0 +1,10 @@
+apiVersion: v2
+name: kafka
+description: Apache Kafka for bank-app messaging
+type: application
+version: 0.1.0
+appVersion: "3.9"
+dependencies:
+  - name: kafka
+    version: 1.3.14
+    repository: oci://ghcr.io/helmforgedev/helm

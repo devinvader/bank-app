@@ -41,6 +41,12 @@ redis:
     host: redis
     port: "6379"
 
+kafka:
+  enabled: true
+  service:
+    name: kafka
+    port: 9092
+
 keycloak:
   enabled: true
   replicaCount: 1
@@ -74,9 +80,7 @@ bank-accounts:
   config:
     data:
       IMPORT_DEMO_DATA: "true"
-  secret:
-    data:
-      KEYCLOAK_CLIENT_SECRET: accounts-secret
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
 
 bank-cash:
   enabled: true
@@ -90,7 +94,7 @@ bank-cash:
   config:
     data:
       ACCOUNTS_BASE_URL: "http://bank-accounts"
-      NOTIFICATIONS_BASE_URL: "http://bank-notifications"
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
   secret:
     data:
       KEYCLOAK_CLIENT_SECRET: cash-secret
@@ -107,7 +111,7 @@ bank-transfer:
   config:
     data:
       ACCOUNTS_BASE_URL: "http://bank-accounts"
-      NOTIFICATIONS_BASE_URL: "http://bank-notifications"
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
   secret:
     data:
       KEYCLOAK_CLIENT_SECRET: transfer-secret
@@ -122,9 +126,8 @@ bank-notifications:
     port: 80
     targetPort: 8085
   config:
-    data: {}
-  secret:
-    data: {}
+    data:
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
 
 bank-gateway:
   enabled: true

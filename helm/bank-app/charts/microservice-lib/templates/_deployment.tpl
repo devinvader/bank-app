@@ -38,7 +38,7 @@ spec:
               port: {{ .Values.service.targetPort }}
             initialDelaySeconds: 20
             periodSeconds: 10
-            failureThreshold: 30
+            failureThreshold: 60
           readinessProbe:
             httpGet:
               path: /actuator/health

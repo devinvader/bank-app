@@ -19,7 +19,7 @@ config:
     KEYCLOAK_PORT: "80"
     KEYCLOAK_REALM: bank
     IMPORT_DEMO_DATA: "true"
+    KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
 secret:
   data:
     DB_PASSWORD: postgres
-    KEYCLOAK_CLIENT_SECRET: accounts-secret

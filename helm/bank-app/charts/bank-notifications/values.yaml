@@ -15,9 +15,7 @@ config:
     DB_NAME: bank
     DB_USERNAME: postgres
     SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/bank?currentSchema=notifications"
-    KEYCLOAK_HOST: keycloak
-    KEYCLOAK_PORT: "80"
-    KEYCLOAK_REALM: bank
+    KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
 secret:
   data:
     DB_PASSWORD: postgres

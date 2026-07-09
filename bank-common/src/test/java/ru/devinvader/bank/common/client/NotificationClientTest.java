@@ -1,64 +1,104 @@
 package ru.devinvader.bank.common.client;
 
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.kafka.core.KafkaTemplate;
 import ru.devinvader.bank.common.mapper.NotificationRequestMapper;
+import ru.devinvader.bank.common.model.NotificationRequest;
 import ru.devinvader.bank.common.model.NotificationType;
 
 import java.math.BigDecimal;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.util.ReflectionTestUtils.setField;
 
+@ExtendWith(MockitoExtension.class)
 class NotificationClientTest {
 
-    private MockWebServer mockWebServer;
+    @Mock
+    private KafkaTemplate<String, NotificationRequest> kafkaTemplate;
+
     private NotificationClient notificationClient;
 
     @BeforeEach
-    void setUp() throws Exception {
-        mockWebServer = new MockWebServer();
-        mockWebServer.start();
-        var webClientBuilder = WebClient.builder();
-        var baseUrl = mockWebServer.url("/").toString().replaceAll("/$", "");
-        notificationClient = new NotificationClient(webClientBuilder, baseUrl, new NotificationRequestMapper());
-    }
-
-    @AfterEach
-    void tearDown() throws Exception {
-        mockWebServer.shutdown();
+    void setUp() {
+        when(kafkaTemplate.send(any(), any(), any(NotificationRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(null));
+        notificationClient = new NotificationClient(kafkaTemplate,
+                new NotificationRequestMapper());
+        setField(notificationClient, "topic", "notifications-test");
     }
 
     @Test
-    void send_validRequest_shouldPostToNotifications() throws Exception {
-        mockWebServer.enqueue(new MockResponse()
-                .setResponseCode(200)
-                .addHeader("Content-Type", "application/json"));
+    void send_depositRequest_shouldSendToKafka() {
+        var accountId = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
 
         assertThatCode(() -> notificationClient.send(NotificationType.DEPOSIT,
-                UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a"),
-                BigDecimal.valueOf(100), "Test message"))
+                accountId, BigDecimal.valueOf(100), "Test deposit message"))
                 .doesNotThrowAnyException();
 
-        var recordedRequest = mockWebServer.takeRequest();
-        assertThat(recordedRequest.getPath()).isEqualTo("/api/notifications");
-        assertThat(recordedRequest.getMethod()).isEqualTo("POST");
-        assertThat(recordedRequest.getBody().readUtf8()).contains("DEPOSIT");
+        ArgumentCaptor<NotificationRequest> captor = ArgumentCaptor.forClass(NotificationRequest.class);
+        verify(kafkaTemplate).send(eq("notifications-test"), eq(accountId.toString()), captor.capture());
+
+        var sent = captor.getValue();
+        assertThat(sent.type()).isEqualTo(NotificationType.DEPOSIT);
+        assertThat(sent.accountId()).isEqualTo(accountId);
+        assertThat(sent.amount()).isEqualTo(BigDecimal.valueOf(100));
+        assertThat(sent.message()).contains("Test deposit message");
     }
 
     @Test
-    void send_serverError_shouldPropagateException() {
-        mockWebServer.enqueue(new MockResponse().setResponseCode(500));
+    void send_transferRequest_shouldSendWithCorrectType() {
+        var accountId = UUID.randomUUID();
 
-        assertThatThrownBy(() -> notificationClient.send(NotificationType.WITHDRAWAL,
-                UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a"),
-                BigDecimal.valueOf(200), "Test message"))
-                .isInstanceOf(org.springframework.web.reactive.function.client.WebClientResponseException.class);
+        notificationClient.send(NotificationType.TRANSFER, accountId,
+                BigDecimal.valueOf(500), "Transfer message");
+
+        ArgumentCaptor<NotificationRequest> captor = ArgumentCaptor.forClass(NotificationRequest.class);
+        verify(kafkaTemplate).send(eq("notifications-test"), eq(accountId.toString()), captor.capture());
+
+        var sent = captor.getValue();
+        assertThat(sent.type()).isEqualTo(NotificationType.TRANSFER);
+        assertThat(sent.amount()).isEqualTo(BigDecimal.valueOf(500));
+    }
+
+    @Test
+    void send_withdrawalRequest_shouldSendWithCorrectType() {
+        var accountId = UUID.randomUUID();
+
+        notificationClient.send(NotificationType.WITHDRAWAL, accountId,
+                BigDecimal.valueOf(200), "Withdrawal message");
+
+        ArgumentCaptor<NotificationRequest> captor = ArgumentCaptor.forClass(NotificationRequest.class);
+        verify(kafkaTemplate).send(eq("notifications-test"), eq(accountId.toString()), captor.capture());
+
+        var sent = captor.getValue();
+        assertThat(sent.type()).isEqualTo(NotificationType.WITHDRAWAL);
+    }
+
+    @Test
+    void send_profileUpdateRequest_shouldSendWithZeroAmount() {
+        var accountId = UUID.randomUUID();
+
+        notificationClient.send(NotificationType.PROFILE_UPDATE, accountId,
+                BigDecimal.ZERO, "Profile updated");
+
+        ArgumentCaptor<NotificationRequest> captor = ArgumentCaptor.forClass(NotificationRequest.class);
+        verify(kafkaTemplate).send(eq("notifications-test"), eq(accountId.toString()), captor.capture());
+
+        var sent = captor.getValue();
+        assertThat(sent.type()).isEqualTo(NotificationType.PROFILE_UPDATE);
+        assertThat(sent.amount()).isEqualTo(BigDecimal.ZERO);
     }
 }

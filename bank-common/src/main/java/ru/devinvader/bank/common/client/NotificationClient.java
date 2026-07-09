@@ -1,11 +1,12 @@
 package ru.devinvader.bank.common.client;
 
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
 import ru.devinvader.bank.common.mapper.NotificationRequestMapper;
+import ru.devinvader.bank.common.model.NotificationRequest;
 import ru.devinvader.bank.common.model.NotificationType;
 
 import java.math.BigDecimal;
@@ -13,36 +14,25 @@ import java.util.UUID;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class NotificationClient {
 
-    private final WebClient.Builder webClientBuilder;
-    private final String notificationsBaseUrl;
+    private final KafkaTemplate<String, NotificationRequest> kafkaTemplate;
     private final NotificationRequestMapper notificationRequestMapper;
 
-    public NotificationClient(WebClient.Builder webClientBuilder,
-                              @Value("${notifications.base-url:http://bank-notifications}") String notificationsBaseUrl,
-                              NotificationRequestMapper notificationRequestMapper) {
-        this.webClientBuilder = webClientBuilder;
-        this.notificationsBaseUrl = notificationsBaseUrl;
-        this.notificationRequestMapper = notificationRequestMapper;
-    }
+    @Value("${kafka.topic.notifications:notifications}")
+    private String topic;
 
-    @CircuitBreaker(name = "notificationService", fallbackMethod = "fallbackSend")
     public void send(NotificationType type, UUID accountId, BigDecimal amount, String message) {
         var request = notificationRequestMapper.toRequest(type, accountId, amount, message);
-        webClientBuilder.build()
-                .post()
-                .uri(notificationsBaseUrl + "/api/notifications")
-                .bodyValue(request)
-                .retrieve()
-                .toBodilessEntity()
-                .block();
-        log.info("Notification sent: type={}, accountId={}", type, accountId);
-    }
-
-    public void fallbackSend(NotificationType type, UUID accountId, BigDecimal amount,
-                             String message, Throwable t) {
-        log.error("Notification fallback: type={}, accountId={}, amount={}, message={}, error={}",
-                type, accountId, amount, message, t.getMessage());
+        kafkaTemplate.send(topic, accountId.toString(), request)
+                .whenComplete((result, ex) -> {
+                    if (ex != null) {
+                        log.warn("Failed to send notification to Kafka: type={}, accountId={}, error={}",
+                                type, accountId, ex.getMessage());
+                    } else {
+                        log.info("Notification sent to Kafka: type={}, accountId={}", type, accountId);
+                    }
+                });
     }
 }

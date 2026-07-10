@@ -88,7 +88,7 @@ public class TransferServiceImpl implements TransferService {
             return transferMapper.toResponse(transfer);
         } catch (InsufficientBalanceException e) {
             transfer = transfer.toBuilder()
-                    .status(TransferStatus.COMPLETED)
+                    .status(TransferStatus.REJECTED)
                     .completedAt(Instant.now())
                     .build();
             repository.save(transfer);

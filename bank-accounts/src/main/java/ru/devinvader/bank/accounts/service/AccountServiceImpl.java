@@ -33,9 +33,16 @@ public class AccountServiceImpl implements AccountService {
     private final AccountMapper accountMapper;
 
     @Override
+    public AccountResponse getCurrentOrCreate(UUID currentUserId) {
+        var account = repository.findById(currentUserId)
+                .orElseGet(() -> createDefaultAccount(currentUserId));
+        return accountMapper.toResponse(account);
+    }
+
+    @Override
     public AccountResponse getById(UUID accountId) {
         var account = repository.findById(accountId)
-                .orElseGet(() -> createDefaultAccount(accountId));
+                .orElseThrow(() -> new AccountNotFoundException(accountId));
         return accountMapper.toResponse(account);
     }
 

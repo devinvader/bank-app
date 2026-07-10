@@ -43,6 +43,7 @@ resilience4j:
         base-config: default
         ignore-exceptions:
           - ru.devinvader.bank.common.exception.InsufficientBalanceException
+          - ru.devinvader.bank.common.exception.AccountNotFoundException
 
 kafka:
   topic:

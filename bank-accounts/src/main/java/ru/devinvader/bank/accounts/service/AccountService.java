@@ -9,6 +9,8 @@ import java.util.UUID;
 
 public interface AccountService {
 
+    AccountResponse getCurrentOrCreate(UUID currentUserId);
+
     AccountResponse getById(UUID accountId);
 
     List<AccountResponse> getTransferTargets(UUID excludeAccountId);

@@ -48,7 +48,7 @@ class AccountControllerTest {
     void getCurrentAccount_withValidJwt_shouldReturnOk() throws Exception {
         UUID id = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
         var response = new AccountResponse(id, "Иван Иванов", LocalDate.of(1990, 1, 1), BigDecimal.valueOf(1000));
-        when(accountService.getById(id)).thenReturn(response);
+        when(accountService.getCurrentOrCreate(id)).thenReturn(response);
 
         mockMvc.perform(get("/api/accounts/me")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "accounts:read")
@@ -145,7 +145,7 @@ class AccountControllerTest {
     @Test
     void getCurrentAccount_accountNotFound_shouldReturnNotFound() throws Exception {
         UUID id = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
-        when(accountService.getById(id)).thenThrow(new AccountNotFoundException(id));
+        when(accountService.getCurrentOrCreate(id)).thenThrow(new AccountNotFoundException(id));
 
         mockMvc.perform(get("/api/accounts/me")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "accounts:read")

@@ -12,6 +12,7 @@ import ru.devinvader.bank.cash.mapper.CashMapper;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import ru.devinvader.bank.common.client.AccountsClient;
 import ru.devinvader.bank.common.client.NotificationClient;
+import ru.devinvader.bank.common.exception.AccountNotFoundException;
 import ru.devinvader.bank.common.model.NotificationMessages;
 import ru.devinvader.bank.common.model.AccountResponse;
 import ru.devinvader.bank.cash.model.CashOperation;
@@ -151,6 +152,28 @@ class CashServiceTest {
         assertThatThrownBy(() -> service.deposit(ACCOUNT_ID, request))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Accounts service error");
+    }
+
+    @Test
+    void deposit_whenAccountNotFound_shouldPropagateAccountNotFound() {
+        doThrow(new AccountNotFoundException("account not found: " + ACCOUNT_ID))
+                .when(accountsClient).credit(any(UUID.class), any(BigDecimal.class));
+
+        var request = new CashRequest(BigDecimal.valueOf(100));
+
+        assertThatThrownBy(() -> service.deposit(ACCOUNT_ID, request))
+                .isInstanceOf(AccountNotFoundException.class);
+    }
+
+    @Test
+    void withdraw_whenAccountNotFound_shouldPropagateAccountNotFound() {
+        doThrow(new AccountNotFoundException("account not found: " + ACCOUNT_ID))
+                .when(accountsClient).debit(any(UUID.class), any(BigDecimal.class));
+
+        var request = new CashRequest(BigDecimal.valueOf(100));
+
+        assertThatThrownBy(() -> service.withdraw(ACCOUNT_ID, request))
+                .isInstanceOf(AccountNotFoundException.class);
     }
 
     @Test

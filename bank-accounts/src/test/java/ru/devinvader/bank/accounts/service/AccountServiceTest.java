@@ -68,12 +68,23 @@ class AccountServiceTest {
     }
 
     @Test
-    void getById_nonExistingId_shouldCreateDefault() {
+    void getById_nonExistingId_shouldThrow() {
+        UUID id = UUID.randomUUID();
+        when(repository.findById(id)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.getById(id))
+                .isInstanceOf(AccountNotFoundException.class);
+
+        verify(repository, never()).save(any(Account.class));
+    }
+
+    @Test
+    void getCurrentOrCreate_nonExistingId_shouldCreateDefault() {
         UUID id = UUID.randomUUID();
         when(repository.findById(id)).thenReturn(Optional.empty());
         when(repository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        var result = service.getById(id);
+        var result = service.getCurrentOrCreate(id);
 
         assertThat(result).isNotNull();
         assertThat(result.accountId()).isEqualTo(id);

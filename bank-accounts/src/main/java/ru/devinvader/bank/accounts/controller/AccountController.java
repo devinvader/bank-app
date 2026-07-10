@@ -22,7 +22,7 @@ public class AccountController {
 
     @GetMapping("/me")
     public ResponseEntity<AccountResponse> getCurrentAccount(@CurrentUser UUID accountId) {
-        return ResponseEntity.ok(accountService.getById(accountId));
+        return ResponseEntity.ok(accountService.getCurrentOrCreate(accountId));
     }
 
     @GetMapping("/{accountId}")

@@ -32,8 +32,8 @@ import static org.mockito.Mockito.when;
 @ActiveProfiles("test")
 @Import({AbstractTestcontainersConfiguration.class, TestSecurityConfig.class})
 @AutoConfigureStubRunner(
-    ids = "ru.devinvader.bank.accounts:bank-accounts:+:stubs",
-    stubsMode = StubRunnerProperties.StubsMode.LOCAL
+    ids = "ru.devinvader.bank.accounts:bank-accounts:${bank-accounts.stub.version}:stubs",
+    stubsMode = StubRunnerProperties.StubsMode.CLASSPATH
 )
 public abstract class CashControllerBase {
 

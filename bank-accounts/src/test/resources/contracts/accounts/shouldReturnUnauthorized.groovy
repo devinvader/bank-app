@@ -5,6 +5,9 @@ Contract.make {
     request {
         method 'GET'
         url '/api/accounts/me'
+        headers {
+            header("Authorization", absent())
+        }
     }
     response {
         status UNAUTHORIZED()

@@ -1,3 +1,3 @@
 package ru.devinvader.bank.transfer.model;
 
-public enum TransferStatus { PENDING, COMPLETED, FAILED, REJECTED }
+public enum TransferStatus { PENDING, COMPLETED, FAILED, REJECTED, COMPENSATION_FAILED }

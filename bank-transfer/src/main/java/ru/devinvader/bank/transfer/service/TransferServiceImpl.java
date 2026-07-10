@@ -45,7 +45,7 @@ public class TransferServiceImpl implements TransferService {
     public TransferResponse execute(UUID fromAccountId, TransferRequest request) {
         var transfer = transferMapper.toEntity(fromAccountId, request);
         transfer = repository.save(transfer);
-        return processTransfer(transfer);
+        return processTransfer(transfer, false);
     }
 
     @Override
@@ -56,15 +56,28 @@ public class TransferServiceImpl implements TransferService {
                 .retryCount(existing.retryCount() + 1)
                 .build();
         transfer = repository.save(transfer);
-        return processTransfer(transfer);
+        return processTransfer(transfer, false);
     }
 
-    private TransferResponse processTransfer(TransferRecord transfer) {
-        var debitSucceeded = false;
+    @Override
+    @Transactional
+    public TransferResponse resumeTransfer(TransferRecord existing) {
+        var transfer = existing.toBuilder()
+                .status(TransferStatus.PENDING)
+                .retryCount(existing.retryCount() + 1)
+                .build();
+        transfer = repository.save(transfer);
+        return processTransfer(transfer, true);
+    }
+
+    private TransferResponse processTransfer(TransferRecord transfer, boolean skipDebit) {
+        var debitSucceeded = skipDebit;
         try {
-            accountsClient.debit(transfer.fromAccount(), transfer.amount());
-            debitSucceeded = true;
-            accountsClient.credit(transfer.toAccount(), transfer.amount());
+            if (!skipDebit) {
+                debit(transfer);
+                debitSucceeded = true;
+            }
+            credit(transfer);
 
             transfer = transfer.toBuilder()
                     .status(TransferStatus.COMPLETED)
@@ -72,18 +85,7 @@ public class TransferServiceImpl implements TransferService {
                     .build();
             transfer = repository.save(transfer);
 
-            try {
-                notificationClient.send(NotificationType.TRANSFER, transfer.fromAccount(), transfer.amount(),
-                        notificationMessages.forTransferSent(transfer.toAccount(), transfer.amount()));
-            } catch (Exception e) {
-                log.error("Failed to send notification: {}", e.getMessage());
-            }
-            try {
-                notificationClient.send(NotificationType.TRANSFER, transfer.toAccount(), transfer.amount(),
-                        notificationMessages.forTransferReceived(transfer.fromAccount(), transfer.amount()));
-            } catch (Exception e) {
-                log.error("Failed to send notification: {}", e.getMessage());
-            }
+            notifyParticipants(transfer);
 
             return transferMapper.toResponse(transfer);
         } catch (InsufficientBalanceException e) {
@@ -95,22 +97,55 @@ public class TransferServiceImpl implements TransferService {
             throw e;
         } catch (Exception e) {
             log.error("Transfer failed: {}", e.getMessage());
+            var compensated = false;
             if (debitSucceeded) {
-                try {
-                    accountsClient.credit(transfer.fromAccount(), transfer.amount());
-                    log.info("Compensation: credited back {} to {}", transfer.amount(), transfer.fromAccount());
-                } catch (Exception compEx) {
-                    log.error("Compensation failed: {}", compEx.getMessage());
-                }
+                compensated = compensate(transfer);
             }
 
+            var status = debitSucceeded && !compensated
+                    ? TransferStatus.COMPENSATION_FAILED
+                    : TransferStatus.FAILED;
             transfer = transfer.toBuilder()
-                    .status(TransferStatus.FAILED)
+                    .status(status)
                     .completedAt(Instant.now())
                     .build();
             repository.save(transfer);
 
             throw new RuntimeException("Transfer failed: " + e.getMessage(), e);
+        }
+    }
+
+    private void debit(TransferRecord transfer) {
+        accountsClient.debit(transfer.fromAccount(), transfer.amount());
+    }
+
+    private void credit(TransferRecord transfer) {
+        accountsClient.credit(transfer.toAccount(), transfer.amount());
+    }
+
+    private boolean compensate(TransferRecord transfer) {
+        try {
+            accountsClient.credit(transfer.fromAccount(), transfer.amount());
+            log.info("Compensation: credited back {} to {}", transfer.amount(), transfer.fromAccount());
+            return true;
+        } catch (Exception e) {
+            log.error("Compensation failed: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    private void notifyParticipants(TransferRecord transfer) {
+        try {
+            notificationClient.send(NotificationType.TRANSFER, transfer.fromAccount(), transfer.amount(),
+                    notificationMessages.forTransferSent(transfer.toAccount(), transfer.amount()));
+        } catch (Exception e) {
+            log.error("Failed to send notification: {}", e.getMessage());
+        }
+        try {
+            notificationClient.send(NotificationType.TRANSFER, transfer.toAccount(), transfer.amount(),
+                    notificationMessages.forTransferReceived(transfer.fromAccount(), transfer.amount()));
+        } catch (Exception e) {
+            log.error("Failed to send notification: {}", e.getMessage());
         }
     }
 

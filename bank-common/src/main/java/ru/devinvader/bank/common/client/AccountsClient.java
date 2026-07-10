@@ -9,8 +9,12 @@ import reactor.core.publisher.Mono;
 import ru.devinvader.bank.common.exception.AccountNotFoundException;
 import ru.devinvader.bank.common.exception.InsufficientBalanceException;
 import ru.devinvader.bank.common.model.AccountResponse;
+import ru.devinvader.bank.common.model.AccountsExistenceRequest;
+import ru.devinvader.bank.common.model.AccountsExistenceResponse;
 
 import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -57,6 +61,18 @@ public class AccountsClient {
                 .block();
     }
 
+    @CircuitBreaker(name = "accountsService", fallbackMethod = "fallbackCheckExistence")
+    public List<UUID> findMissingAccounts(Collection<UUID> accountIds) {
+        var response = webClientBuilder.build()
+                .post()
+                .uri(accountsBaseUrl + "/api/accounts/exists")
+                .bodyValue(new AccountsExistenceRequest(List.copyOf(accountIds)))
+                .retrieve()
+                .bodyToMono(AccountsExistenceResponse.class)
+                .block();
+        return response != null ? response.missing() : List.of();
+    }
+
     @CircuitBreaker(name = "accountsService", fallbackMethod = "fallbackGetAccount")
     public AccountResponse getAccount(UUID accountId) {
         return webClientBuilder.build()
@@ -85,6 +101,12 @@ public class AccountsClient {
     public AccountResponse fallbackGetAccount(UUID accountId, Throwable t) {
         rethrowIfBusiness(t);
         log.error("GetAccount fallback: accountId={}, error={}", accountId, t.getMessage());
+        throw new RuntimeException("Accounts service temporarily unavailable");
+    }
+
+    public List<UUID> fallbackCheckExistence(Collection<UUID> accountIds, Throwable t) {
+        rethrowIfBusiness(t);
+        log.error("CheckExistence fallback: accountIds={}, error={}", accountIds, t.getMessage());
         throw new RuntimeException("Accounts service temporarily unavailable");
     }
 

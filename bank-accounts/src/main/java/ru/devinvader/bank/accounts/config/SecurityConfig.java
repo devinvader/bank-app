@@ -27,6 +27,8 @@ public class SecurityConfig {
                         .hasAuthority("SCOPE_accounts:write")
                         .requestMatchers(HttpMethod.PUT, "/api/accounts/me")
                         .hasAuthority("SCOPE_accounts:write")
+                        .requestMatchers(HttpMethod.POST, "/api/accounts/exists")
+                        .hasAuthority("SCOPE_accounts:read")
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/accounts/me", "/api/accounts/{accountId}", "/api/accounts/transfer-targets")

@@ -93,6 +93,28 @@ class AccountServiceTest {
     }
 
     @Test
+    void findMissingAccounts_allExist_shouldReturnEmpty() {
+        UUID id1 = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
+        UUID id2 = UUID.fromString("447129a6-bf9b-4dcd-9b35-36d192bb525a");
+        when(repository.findExistingIds(List.of(id1, id2))).thenReturn(List.of(id1, id2));
+
+        var result = service.findMissingAccounts(List.of(id1, id2));
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void findMissingAccounts_someMissing_shouldReturnMissing() {
+        UUID existing = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
+        UUID missing = UUID.fromString("00000000-0000-0000-0000-000000000000");
+        when(repository.findExistingIds(List.of(existing, missing))).thenReturn(List.of(existing));
+
+        var result = service.findMissingAccounts(List.of(existing, missing));
+
+        assertThat(result).containsExactly(missing);
+    }
+
+    @Test
     void debit_sufficientBalance_shouldDecreaseBalance() {
         UUID id = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
         var account = account(id, "Иван", BigDecimal.valueOf(1000));

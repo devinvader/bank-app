@@ -20,6 +20,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
@@ -47,8 +49,16 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public List<AccountResponse> getTransferTargets(UUID excludeAccountId) {
-        return repository.findAllByIdNot(excludeAccountId).stream()
+    public List<UUID> findMissingAccounts(Collection<UUID> accountIds) {
+        var existing = new HashSet<>(repository.findExistingIds(accountIds));
+        return accountIds.stream()
+                .filter(id -> !existing.contains(id))
+                .distinct()
+                .toList();
+    }
+
+    @Override
+    public List<AccountResponse> getTransferTargets(UUID excludeAccountId) {        return repository.findAllByIdNot(excludeAccountId).stream()
                 .map(accountMapper::toResponse)
                 .toList();
     }

@@ -8,6 +8,7 @@ import ru.devinvader.bank.accounts.model.Account;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,6 +17,9 @@ public interface AccountRepository extends CrudRepository<Account, UUID> {
 
     @Query("SELECT * FROM accounts WHERE id != :id")
     List<Account> findAllByIdNot(UUID id);
+
+    @Query("SELECT id FROM accounts WHERE id IN (:ids)")
+    List<UUID> findExistingIds(Collection<UUID> ids);
 
     @Modifying
     @Query("UPDATE accounts SET balance = balance - :amount, updated_at = :updatedAt "

@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -198,6 +199,39 @@ class AccountControllerTest {
         mockMvc.perform(get("/api/accounts/afd94176-3179-4285-9f6b-96fd9131628a")
                         .with(jwt().jwt(jwt -> jwt.claim("scope", "accounts:read"))))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void checkExistence_withValidJwt_shouldReturnMissing() throws Exception {
+        UUID missing = UUID.fromString("00000000-0000-0000-0000-000000000000");
+        when(accountService.findMissingAccounts(anyCollection())).thenReturn(List.of(missing));
+
+        mockMvc.perform(post("/api/accounts/exists")
+                        .with(jwt().jwt(jwt -> jwt.claim("scope", "accounts:read")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "accountIds": [
+                                        "afd94176-3179-4285-9f6b-96fd9131628a",
+                                        "00000000-0000-0000-0000-000000000000"
+                                    ]
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.missing[0]").value("00000000-0000-0000-0000-000000000000"));
+    }
+
+    @Test
+    void checkExistence_withWrongScope_shouldReturnForbidden() throws Exception {
+        mockMvc.perform(post("/api/accounts/exists")
+                        .with(jwt().jwt(jwt -> jwt.claim("scope", "wrong:scope")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                    "accountIds": ["afd94176-3179-4285-9f6b-96fd9131628a"]
+                                }
+                                """))
+                .andExpect(status().isForbidden());
     }
 
     @Test

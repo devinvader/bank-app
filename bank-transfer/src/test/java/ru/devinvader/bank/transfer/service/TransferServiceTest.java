@@ -10,6 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import ru.devinvader.bank.common.client.AccountsClient;
 import ru.devinvader.bank.common.client.NotificationClient;
+import ru.devinvader.bank.common.exception.AccountNotFoundException;
 import ru.devinvader.bank.common.exception.InsufficientBalanceException;
 import ru.devinvader.bank.common.model.NotificationMessages;
 import ru.devinvader.bank.common.model.NotificationType;
@@ -72,6 +73,7 @@ class TransferServiceTest {
         service = new TransferServiceImpl(repository, accountsClient, notificationClient,
                 new NotificationMessages(messageSource), new TransferMapper());
         lenient().when(repository.save(any(TransferRecord.class))).thenAnswer(inv -> inv.getArgument(0));
+        lenient().when(accountsClient.findMissingAccounts(any())).thenReturn(List.of());
     }
 
     private TransferRequest request() {
@@ -128,6 +130,21 @@ class TransferServiceTest {
         verify(accountsClient, never()).credit(any(UUID.class), any(BigDecimal.class));
         assertThat(savedStatuses())
                 .contains(TransferStatus.FAILED)
+                .doesNotContain(TransferStatus.COMPLETED);
+        verifyNoInteractions(notificationClient);
+    }
+
+    @Test
+    void execute_accountMissing_shouldRejectFast_noDebit() {
+        when(accountsClient.findMissingAccounts(List.of(FROM, TO))).thenReturn(List.of(TO));
+
+        assertThatThrownBy(() -> service.execute(FROM, request()))
+                .isInstanceOf(AccountNotFoundException.class);
+
+        verify(accountsClient, never()).debit(any(UUID.class), any(BigDecimal.class));
+        verify(accountsClient, never()).credit(any(UUID.class), any(BigDecimal.class));
+        assertThat(savedStatuses())
+                .contains(TransferStatus.REJECTED)
                 .doesNotContain(TransferStatus.COMPLETED);
         verifyNoInteractions(notificationClient);
     }

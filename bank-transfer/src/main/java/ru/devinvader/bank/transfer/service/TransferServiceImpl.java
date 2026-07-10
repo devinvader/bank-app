@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.devinvader.bank.common.client.AccountsClient;
 import ru.devinvader.bank.common.client.NotificationClient;
+import ru.devinvader.bank.common.exception.AccountNotFoundException;
 import ru.devinvader.bank.common.exception.InsufficientBalanceException;
 import ru.devinvader.bank.common.model.NotificationMessages;
 import ru.devinvader.bank.common.model.NotificationType;
@@ -45,6 +46,17 @@ public class TransferServiceImpl implements TransferService {
     public TransferResponse execute(UUID fromAccountId, TransferRequest request) {
         var transfer = transferMapper.toEntity(fromAccountId, request);
         transfer = repository.save(transfer);
+
+        var missing = accountsClient.findMissingAccounts(List.of(fromAccountId, request.toAccountId()));
+        if (!missing.isEmpty()) {
+            transfer = transfer.toBuilder()
+                    .status(TransferStatus.REJECTED)
+                    .completedAt(Instant.now())
+                    .build();
+            repository.save(transfer);
+            throw new AccountNotFoundException("Accounts not found: " + missing);
+        }
+
         return processTransfer(transfer, false);
     }
 

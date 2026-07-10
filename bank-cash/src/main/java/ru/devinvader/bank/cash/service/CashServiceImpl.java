@@ -45,12 +45,8 @@ public class CashServiceImpl implements CashService {
 
         var balance = updateBalance(accountId, request.amount(), "credit");
 
-        try {
-            notificationClient.send(NotificationType.CASH_DEPOSIT, accountId, request.amount(),
-                    notificationMessages.forDeposit(accountId, request.amount()));
-        } catch (Exception e) {
-            log.error("Failed to send notification: {}", e.getMessage());
-        }
+        notificationClient.send(NotificationType.CASH_DEPOSIT, accountId, request.amount(),
+                notificationMessages.forDeposit(accountId, request.amount()));
 
         return cashMapper.toResponse(accountId, balance, CashOperationType.DEPOSIT, request.amount());
     }
@@ -63,12 +59,8 @@ public class CashServiceImpl implements CashService {
 
         var balance = updateBalance(accountId, request.amount(), "debit");
 
-        try {
-            notificationClient.send(NotificationType.CASH_WITHDRAWAL, accountId, request.amount(),
-                    notificationMessages.forWithdrawal(accountId, request.amount()));
-        } catch (Exception e) {
-            log.error("Failed to send notification: {}", e.getMessage());
-        }
+        notificationClient.send(NotificationType.CASH_WITHDRAWAL, accountId, request.amount(),
+                notificationMessages.forWithdrawal(accountId, request.amount()));
 
         return cashMapper.toResponse(accountId, balance, CashOperationType.WITHDRAWAL, request.amount());
     }

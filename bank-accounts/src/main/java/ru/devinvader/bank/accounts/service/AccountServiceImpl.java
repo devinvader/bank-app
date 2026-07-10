@@ -75,12 +75,8 @@ public class AccountServiceImpl implements AccountService {
                 .updatedAt(Instant.now())
                 .build();
         var result = accountMapper.toResponse(repository.save(account));
-        try {
-            notificationClient.send(NotificationType.PROFILE_UPDATE, accountId, BigDecimal.ZERO,
-                    notificationMessages.forProfileUpdate(accountId));
-        } catch (Exception e) {
-            log.error("Failed to send notification: {}", e.getMessage());
-        }
+        notificationClient.send(NotificationType.PROFILE_UPDATE, accountId, BigDecimal.ZERO,
+                notificationMessages.forProfileUpdate(accountId));
         return result;
     }
 

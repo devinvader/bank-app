@@ -182,20 +182,6 @@ class TransferServiceTest {
     }
 
     @Test
-    void execute_notificationFails_shouldStillComplete() {
-        doThrow(new RuntimeException("kafka down"))
-                .when(notificationClient).send(any(NotificationType.class), any(UUID.class),
-                        any(BigDecimal.class), any(String.class));
-
-        var response = service.execute(FROM, request());
-
-        assertThat(response.status()).isEqualTo(TransferStatus.COMPLETED);
-        assertThat(savedStatuses()).contains(TransferStatus.COMPLETED);
-        verify(notificationClient, times(2))
-                .send(any(NotificationType.class), any(UUID.class), any(BigDecimal.class), any(String.class));
-    }
-
-    @Test
     void resumeTransfer_success_shouldCreditWithoutDebit_andComplete() {
         var existing = COMPENSATION_FAILED;
 

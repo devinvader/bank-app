@@ -147,18 +147,10 @@ public class TransferServiceImpl implements TransferService {
     }
 
     private void notifyParticipants(TransferRecord transfer) {
-        try {
-            notificationClient.send(NotificationType.TRANSFER_SENT, transfer.fromAccount(), transfer.amount(),
-                    notificationMessages.forTransferSent(transfer.toAccount(), transfer.amount()));
-        } catch (Exception e) {
-            log.error("Failed to send notification: {}", e.getMessage());
-        }
-        try {
-            notificationClient.send(NotificationType.TRANSFER_RECEIVED, transfer.toAccount(), transfer.amount(),
-                    notificationMessages.forTransferReceived(transfer.fromAccount(), transfer.amount()));
-        } catch (Exception e) {
-            log.error("Failed to send notification: {}", e.getMessage());
-        }
+        notificationClient.send(NotificationType.TRANSFER_SENT, transfer.fromAccount(), transfer.amount(),
+                notificationMessages.forTransferSent(transfer.toAccount(), transfer.amount()));
+        notificationClient.send(NotificationType.TRANSFER_RECEIVED, transfer.toAccount(), transfer.amount(),
+                notificationMessages.forTransferReceived(transfer.fromAccount(), transfer.amount()));
     }
 
     @Override

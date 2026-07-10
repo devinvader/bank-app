@@ -195,16 +195,4 @@ class CashServiceTest {
 
         verify(notificationClient).send(any(), any(UUID.class), any(), anyString());
     }
-
-    @Test
-    void notificationFailure_shouldNotCrashDeposit() {
-        stubSuccessfulOperation(BigDecimal.valueOf(1100));
-        doThrow(new RuntimeException("Notification failed"))
-                .when(notificationClient).send(any(), any(UUID.class), any(), anyString());
-
-        var request = new CashRequest(BigDecimal.valueOf(100));
-        var response = service.deposit(ACCOUNT_ID, request);
-
-        assertThat(response.type()).isEqualTo(CashOperationType.DEPOSIT);
-    }
 }

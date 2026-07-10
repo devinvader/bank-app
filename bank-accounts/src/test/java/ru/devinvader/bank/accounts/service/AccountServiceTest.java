@@ -25,6 +25,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -79,7 +80,7 @@ class AccountServiceTest {
         UUID id = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
         var account = account(id, "Иван", BigDecimal.valueOf(1000));
         when(repository.findById(id)).thenReturn(Optional.of(account));
-        when(repository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(repository.debit(eq(id), eq(BigDecimal.valueOf(300)), any(Instant.class))).thenReturn(1);
 
         service.debit(id, BigDecimal.valueOf(300));
     }
@@ -89,6 +90,7 @@ class AccountServiceTest {
         UUID id = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
         var account = account(id, "Иван", BigDecimal.valueOf(100));
         when(repository.findById(id)).thenReturn(Optional.of(account));
+        when(repository.debit(eq(id), eq(BigDecimal.valueOf(500)), any(Instant.class))).thenReturn(0);
 
         assertThatThrownBy(() -> service.debit(id, BigDecimal.valueOf(500)))
                 .isInstanceOf(InsufficientBalanceException.class);
@@ -97,9 +99,7 @@ class AccountServiceTest {
     @Test
     void credit_shouldIncreaseBalance() {
         UUID id = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
-        var account = account(id, "Иван", BigDecimal.valueOf(500));
-        when(repository.findById(id)).thenReturn(Optional.of(account));
-        when(repository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(repository.credit(eq(id), eq(BigDecimal.valueOf(200)), any(Instant.class))).thenReturn(1);
 
         service.credit(id, BigDecimal.valueOf(200));
     }

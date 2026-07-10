@@ -72,14 +72,10 @@ public class AccountServiceImpl implements AccountService {
     public void debit(UUID accountId, BigDecimal amount) {
         var account = repository.findById(accountId)
                 .orElseThrow(() -> new AccountNotFoundException(accountId));
-        if (account.balance().compareTo(amount) < 0) {
+        int updated = repository.debit(accountId, amount, Instant.now());
+        if (updated == 0) {
             throw new InsufficientBalanceException(amount, account.balance());
         }
-        account = account.toBuilder()
-                .balance(account.balance().subtract(amount))
-                .updatedAt(Instant.now())
-                .build();
-        repository.save(account);
         notificationClient.send(NotificationType.WITHDRAWAL, accountId, amount,
                 notificationMessages.forWithdrawal(accountId, amount));
     }
@@ -87,13 +83,10 @@ public class AccountServiceImpl implements AccountService {
     @Override
     @Transactional
     public void credit(UUID accountId, BigDecimal amount) {
-        var account = repository.findById(accountId)
-                .orElseThrow(() -> new AccountNotFoundException(accountId));
-        account = account.toBuilder()
-                .balance(account.balance().add(amount))
-                .updatedAt(Instant.now())
-                .build();
-        repository.save(account);
+        int updated = repository.credit(accountId, amount, Instant.now());
+        if (updated == 0) {
+            throw new AccountNotFoundException(accountId);
+        }
         notificationClient.send(NotificationType.DEPOSIT, accountId, amount,
                 notificationMessages.forDeposit(accountId, amount));
     }

@@ -19,9 +19,9 @@ class NotificationRequestMapperTest {
     @Test
     void toRequest_shouldMapAllFields() {
         var request = mapper.toRequest(
-                NotificationType.DEPOSIT, ACC_1, BigDecimal.valueOf(100), "Deposit");
+                NotificationType.CASH_DEPOSIT, ACC_1, BigDecimal.valueOf(100), "Deposit");
 
-        assertThat(request.type()).isEqualTo(NotificationType.DEPOSIT);
+        assertThat(request.type()).isEqualTo(NotificationType.CASH_DEPOSIT);
         assertThat(request.accountId()).isEqualTo(ACC_1);
         assertThat(request.amount()).isEqualTo(BigDecimal.valueOf(100));
         assertThat(request.message()).isEqualTo("Deposit");
@@ -30,9 +30,9 @@ class NotificationRequestMapperTest {
     @Test
     void toRequest_withdrawal_shouldMapCorrectly() {
         var request = mapper.toRequest(
-                NotificationType.WITHDRAWAL, ACC_2, BigDecimal.valueOf(200), "Withdrawal");
+                NotificationType.CASH_WITHDRAWAL, ACC_2, BigDecimal.valueOf(200), "Withdrawal");
 
-        assertThat(request.type()).isEqualTo(NotificationType.WITHDRAWAL);
+        assertThat(request.type()).isEqualTo(NotificationType.CASH_WITHDRAWAL);
         assertThat(request.accountId()).isEqualTo(ACC_2);
     }
 

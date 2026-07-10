@@ -35,7 +35,7 @@ class NotificationServiceTest {
 
     @Test
     void send_validRequest_shouldSaveAndReturnSent() {
-        var request = new NotificationRequest(NotificationType.TRANSFER, UUID.randomUUID(),
+        var request = new NotificationRequest(NotificationType.TRANSFER_SENT, UUID.randomUUID(),
                 new BigDecimal("100.50"), "Test transfer");
 
         when(repository.save(any(Notification.class)))
@@ -54,7 +54,7 @@ class NotificationServiceTest {
         when(repository.save(any(Notification.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        var request = new NotificationRequest(NotificationType.DEPOSIT, UUID.randomUUID(),
+        var request = new NotificationRequest(NotificationType.CASH_DEPOSIT, UUID.randomUUID(),
                 new BigDecimal("50.00"), "депозит");
 
         var result = service.send(request);
@@ -68,7 +68,7 @@ class NotificationServiceTest {
         doThrow(new RuntimeException())
                 .when(repository).save(any(Notification.class));
 
-        var request = new NotificationRequest(NotificationType.TRANSFER, UUID.randomUUID(),
+        var request = new NotificationRequest(NotificationType.TRANSFER_SENT, UUID.randomUUID(),
                 new BigDecimal("100.00"), "Test");
 
         assertThatThrownBy(() -> service.send(request))

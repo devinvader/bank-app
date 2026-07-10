@@ -99,9 +99,9 @@ class TransferServiceTest {
         assertThat(savedStatuses()).containsExactly(TransferStatus.PENDING, TransferStatus.COMPLETED);
 
         verify(notificationClient, times(2))
-                .send(eq(NotificationType.TRANSFER), any(UUID.class), eq(AMOUNT), any(String.class));
-        verify(notificationClient).send(eq(NotificationType.TRANSFER), eq(FROM), eq(AMOUNT), any(String.class));
-        verify(notificationClient).send(eq(NotificationType.TRANSFER), eq(TO), eq(AMOUNT), any(String.class));
+                .send(any(NotificationType.class), any(UUID.class), eq(AMOUNT), any(String.class));
+        verify(notificationClient).send(eq(NotificationType.TRANSFER_SENT), eq(FROM), eq(AMOUNT), any(String.class));
+        verify(notificationClient).send(eq(NotificationType.TRANSFER_RECEIVED), eq(TO), eq(AMOUNT), any(String.class));
     }
 
     @Test

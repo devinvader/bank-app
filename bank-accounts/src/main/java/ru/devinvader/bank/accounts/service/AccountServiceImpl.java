@@ -93,8 +93,6 @@ public class AccountServiceImpl implements AccountService {
         if (updated == 0) {
             throw new InsufficientBalanceException(amount, account.balance());
         }
-        notificationClient.send(NotificationType.WITHDRAWAL, accountId, amount,
-                notificationMessages.forWithdrawal(accountId, amount));
     }
 
     @Override
@@ -104,8 +102,6 @@ public class AccountServiceImpl implements AccountService {
         if (updated == 0) {
             throw new AccountNotFoundException(accountId);
         }
-        notificationClient.send(NotificationType.DEPOSIT, accountId, amount,
-                notificationMessages.forDeposit(accountId, amount));
     }
 
     private void validateAge(LocalDate birthdate) {

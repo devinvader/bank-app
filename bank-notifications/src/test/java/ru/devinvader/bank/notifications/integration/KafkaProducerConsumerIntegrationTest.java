@@ -66,7 +66,7 @@ class KafkaProducerConsumerIntegrationTest {
     @Test
     void produceAndConsume_shouldReceiveExactMessage() {
         var accountId = UUID.randomUUID();
-        var request = new NotificationRequest(NotificationType.DEPOSIT, accountId,
+        var request = new NotificationRequest(NotificationType.CASH_DEPOSIT, accountId,
                 BigDecimal.valueOf(500), "Test message");
 
         producer.send(new ProducerRecord<>("test-topic", accountId.toString(), request));
@@ -77,7 +77,7 @@ class KafkaProducerConsumerIntegrationTest {
 
         assertThat(records.count()).isEqualTo(1);
         ConsumerRecord<String, NotificationRequest> record = records.iterator().next();
-        assertThat(record.value().type()).isEqualTo(NotificationType.DEPOSIT);
+        assertThat(record.value().type()).isEqualTo(NotificationType.CASH_DEPOSIT);
         assertThat(record.value().accountId()).isEqualTo(accountId);
         assertThat(record.value().amount()).isEqualTo(BigDecimal.valueOf(500));
         assertThat(record.value().message()).isEqualTo("Test message");
@@ -86,7 +86,7 @@ class KafkaProducerConsumerIntegrationTest {
     @Test
     void produceTransferNotification_shouldReceiveWithCorrectType() {
         var accountId = UUID.randomUUID();
-        var request = new NotificationRequest(NotificationType.TRANSFER, accountId,
+        var request = new NotificationRequest(NotificationType.TRANSFER_SENT, accountId,
                 BigDecimal.valueOf(1000), "Transfer message");
 
         producer.send(new ProducerRecord<>("test-topic-2", accountId.toString(), request));
@@ -97,7 +97,7 @@ class KafkaProducerConsumerIntegrationTest {
 
         assertThat(records.count()).isEqualTo(1);
         var record = records.iterator().next();
-        assertThat(record.value().type()).isEqualTo(NotificationType.TRANSFER);
+        assertThat(record.value().type()).isEqualTo(NotificationType.TRANSFER_SENT);
         assertThat(record.value().amount()).isEqualTo(BigDecimal.valueOf(1000));
     }
 }

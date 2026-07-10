@@ -11,7 +11,6 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 import ru.devinvader.bank.accounts.exception.AccountNotFoundException;
 import ru.devinvader.bank.common.client.NotificationClient;
 import ru.devinvader.bank.common.model.NotificationMessages;
-import ru.devinvader.bank.common.model.NotificationType;
 import ru.devinvader.bank.accounts.exception.AgeValidationException;
 import ru.devinvader.bank.accounts.exception.InsufficientBalanceException;
 import ru.devinvader.bank.accounts.model.Account;
@@ -28,7 +27,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -129,8 +127,7 @@ class AccountServiceTest {
         assertThat(idCaptor.getValue()).isEqualTo(id);
         assertThat(amountCaptor.getValue()).isEqualByComparingTo(BigDecimal.valueOf(300));
 
-        verify(notificationClient).send(eq(NotificationType.WITHDRAWAL), eq(id),
-                eq(BigDecimal.valueOf(300)), anyString());
+        verify(notificationClient, never()).send(any(), any(), any(), any());
     }
 
     @Test
@@ -160,8 +157,7 @@ class AccountServiceTest {
         assertThat(idCaptor.getValue()).isEqualTo(id);
         assertThat(amountCaptor.getValue()).isEqualByComparingTo(BigDecimal.valueOf(200));
 
-        verify(notificationClient).send(eq(NotificationType.DEPOSIT), eq(id),
-                eq(BigDecimal.valueOf(200)), anyString());
+        verify(notificationClient, never()).send(any(), any(), any(), any());
     }
 
     @Test

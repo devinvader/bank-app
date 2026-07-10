@@ -1,5 +1,9 @@
 package ru.devinvader.bank.common.model;
 
 public enum NotificationType {
-    TRANSFER, DEPOSIT, WITHDRAWAL, PROFILE_UPDATE
+    CASH_DEPOSIT,
+    CASH_WITHDRAWAL,
+    TRANSFER_SENT,
+    TRANSFER_RECEIVED,
+    PROFILE_UPDATE
 }

@@ -14,7 +14,7 @@ public class NotificationKafkaConsumer {
 
     private final NotificationService notificationService;
 
-    @KafkaListener(topics = "${kafka.topic.notifications:notifications}",
+    @KafkaListener(topics = "${kafka.topic.notifications.name:notifications}",
             groupId = "${spring.kafka.consumer.group-id:notifications-group}",
             containerFactory = "notificationKafkaListenerContainerFactory")
     public void consume(ConsumerRecord<String, NotificationRequest> record) {

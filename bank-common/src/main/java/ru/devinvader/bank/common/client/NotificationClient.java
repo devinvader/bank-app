@@ -20,7 +20,7 @@ public class NotificationClient {
     private final KafkaTemplate<String, NotificationRequest> kafkaTemplate;
     private final NotificationRequestMapper notificationRequestMapper;
 
-    @Value("${kafka.topic.notifications:notifications}")
+    @Value("${kafka.topic.notifications.name:notifications}")
     private String topic;
 
     public void send(NotificationType type, UUID accountId, BigDecimal amount, String message) {

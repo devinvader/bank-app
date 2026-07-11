@@ -11,17 +11,14 @@ spring:
     timeout-per-shutdown-phase: 30s
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-    consumer:
-      group-id: notifications-group
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: ru.devinvader.bank.common.config.NotificationDeserializer
-    listener:
-      ack-mode: record
 
 kafka:
   topic:
-    notifications: ${KAFKA_TOPIC_NOTIFICATIONS:notifications}
+    notifications:
+      name: ${KAFKA_TOPIC_NOTIFICATIONS:notifications}
+      partitions: ${KAFKA_TOPIC_NOTIFICATIONS_PARTITIONS:3}
+      replicas: ${KAFKA_TOPIC_NOTIFICATIONS_REPLICAS:1}
+      retention-ms: ${KAFKA_TOPIC_NOTIFICATIONS_RETENTION_MS:604800000}
 
 server:
   port: ${SERVER_PORT:8085}

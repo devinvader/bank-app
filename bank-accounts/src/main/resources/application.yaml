@@ -20,7 +20,8 @@ spring:
 
 kafka:
   topic:
-    notifications: ${KAFKA_TOPIC_NOTIFICATIONS:notifications}
+    notifications:
+      name: ${KAFKA_TOPIC_NOTIFICATIONS:notifications}
 
 server:
   port: ${SERVER_PORT:8082}

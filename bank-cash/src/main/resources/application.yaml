@@ -44,7 +44,8 @@ resilience4j:
 
 kafka:
   topic:
-    notifications: ${KAFKA_TOPIC_NOTIFICATIONS:notifications}
+    notifications:
+      name: ${KAFKA_TOPIC_NOTIFICATIONS:notifications}
 
 accounts:
   base-url: ${ACCOUNTS_BASE_URL:http://bank-accounts}

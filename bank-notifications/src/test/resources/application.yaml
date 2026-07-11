@@ -11,8 +11,3 @@ spring:
   kafka:
     listener:
       auto-startup: false
-      ack-mode: record
-    consumer:
-      group-id: notifications-group
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: ru.devinvader.bank.common.config.NotificationDeserializer

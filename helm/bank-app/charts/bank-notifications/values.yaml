@@ -16,6 +16,10 @@ config:
     DB_USERNAME: postgres
     SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/bank?currentSchema=notifications"
     KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+    KAFKA_TOPIC_NOTIFICATIONS: "notifications"
+    KAFKA_TOPIC_NOTIFICATIONS_PARTITIONS: "3"
+    KAFKA_TOPIC_NOTIFICATIONS_REPLICAS: "1"
+    KAFKA_TOPIC_NOTIFICATIONS_RETENTION_MS: "604800000"
 secret:
   data:
     DB_PASSWORD: postgres

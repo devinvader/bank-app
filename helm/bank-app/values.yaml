@@ -81,6 +81,7 @@ bank-accounts:
     data:
       IMPORT_DEMO_DATA: "true"
       KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+      KAFKA_TOPIC_NOTIFICATIONS: "notifications"
 
 bank-cash:
   enabled: true
@@ -95,6 +96,7 @@ bank-cash:
     data:
       ACCOUNTS_BASE_URL: "http://bank-accounts"
       KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+      KAFKA_TOPIC_NOTIFICATIONS: "notifications"
   secret:
     data:
       KEYCLOAK_CLIENT_SECRET: cash-secret
@@ -112,6 +114,7 @@ bank-transfer:
     data:
       ACCOUNTS_BASE_URL: "http://bank-accounts"
       KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+      KAFKA_TOPIC_NOTIFICATIONS: "notifications"
   secret:
     data:
       KEYCLOAK_CLIENT_SECRET: transfer-secret
@@ -128,6 +131,10 @@ bank-notifications:
   config:
     data:
       KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+      KAFKA_TOPIC_NOTIFICATIONS: "notifications"
+      KAFKA_TOPIC_NOTIFICATIONS_PARTITIONS: "3"
+      KAFKA_TOPIC_NOTIFICATIONS_REPLICAS: "1"
+      KAFKA_TOPIC_NOTIFICATIONS_RETENTION_MS: "604800000"
 
 bank-gateway:
   enabled: true

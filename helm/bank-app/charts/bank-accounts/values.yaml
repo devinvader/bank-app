@@ -20,6 +20,7 @@ config:
     KEYCLOAK_REALM: bank
     IMPORT_DEMO_DATA: "true"
     KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+    KAFKA_TOPIC_NOTIFICATIONS: "notifications"
 secret:
   data:
     DB_PASSWORD: postgres

@@ -43,7 +43,7 @@ public class CashServiceImpl implements CashService {
         var operation = cashMapper.toEntity(accountId, request, CashOperationType.DEPOSIT);
         repository.save(operation);
 
-        var balance = updateBalance(accountId, request.amount(), "credit");
+        var balance = creditBalance(accountId, request.amount());
 
         notificationClient.send(NotificationType.CASH_DEPOSIT, accountId, request.amount(),
                 notificationMessages.forDeposit(accountId, request.amount()));
@@ -57,7 +57,7 @@ public class CashServiceImpl implements CashService {
         var operation = cashMapper.toEntity(accountId, request, CashOperationType.WITHDRAWAL);
         repository.save(operation);
 
-        var balance = updateBalance(accountId, request.amount(), "debit");
+        var balance = debitBalance(accountId, request.amount());
 
         notificationClient.send(NotificationType.CASH_WITHDRAWAL, accountId, request.amount(),
                 notificationMessages.forWithdrawal(accountId, request.amount()));
@@ -65,13 +65,17 @@ public class CashServiceImpl implements CashService {
         return cashMapper.toResponse(accountId, balance, CashOperationType.WITHDRAWAL, request.amount());
     }
 
-    private BigDecimal updateBalance(UUID accountId, BigDecimal amount, String operation) {
-        if ("credit".equals(operation)) {
-            accountsClient.credit(accountId, amount);
-        } else {
-            accountsClient.debit(accountId, amount);
-        }
+    private BigDecimal creditBalance(UUID accountId, BigDecimal amount) {
+        accountsClient.credit(accountId, amount);
+        return fetchBalance(accountId);
+    }
 
+    private BigDecimal debitBalance(UUID accountId, BigDecimal amount) {
+        accountsClient.debit(accountId, amount);
+        return fetchBalance(accountId);
+    }
+
+    private BigDecimal fetchBalance(UUID accountId) {
         try {
             var accountResponse = accountsClient.getAccount(accountId);
             return accountResponse != null ? accountResponse.balance() : BigDecimal.ZERO;

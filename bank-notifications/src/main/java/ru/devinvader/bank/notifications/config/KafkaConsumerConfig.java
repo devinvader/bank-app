@@ -1,26 +1,30 @@
 package ru.devinvader.bank.notifications.config;
 
 import org.apache.kafka.clients.admin.AdminClientConfig;
-import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.common.config.TopicConfig;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
-import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaAdmin;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
+import org.springframework.util.backoff.FixedBackOff;
 import ru.devinvader.bank.common.config.NotificationDeserializer;
 import ru.devinvader.bank.common.model.NotificationRequest;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Configuration
 @EnableKafka
 public class KafkaConsumerConfig {
@@ -52,11 +56,33 @@ public class KafkaConsumerConfig {
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, NotificationRequest>
     notificationKafkaListenerContainerFactory(
-            ConsumerFactory<String, NotificationRequest> notificationConsumerFactory) {
+            ConsumerFactory<String, NotificationRequest> notificationConsumerFactory,
+            DefaultErrorHandler defaultErrorHandler) {
         var factory = new ConcurrentKafkaListenerContainerFactory<String, NotificationRequest>();
         factory.setConsumerFactory(notificationConsumerFactory);
         factory.setAutoStartup(autoStartup);
+        factory.setCommonErrorHandler(defaultErrorHandler);
         return factory;
+    }
+
+    @Bean
+    public DeadLetterPublishingRecoverer deadLetterPublishingRecoverer(
+            KafkaTemplate<String, NotificationRequest> notificationKafkaTemplate) {
+        return new DeadLetterPublishingRecoverer(notificationKafkaTemplate,
+                (cr, e) -> new TopicPartition(
+                        cr.topic() + ".errors", cr.partition()));
+    }
+
+    @Bean
+    public DefaultErrorHandler defaultErrorHandler(
+            DeadLetterPublishingRecoverer deadLetterPublishingRecoverer) {
+        var errorHandler = new DefaultErrorHandler(deadLetterPublishingRecoverer,
+                new FixedBackOff(1000L, 3L));
+        errorHandler.setRetryListeners((record, ex, deliveryAttempt) ->
+                log.error("Retry attempt {} for notification: key={}, topic={}, partition={}, offset={}, error={}",
+                        deliveryAttempt, record.key(), record.topic(),
+                        record.partition(), record.offset(), ex.getMessage()));
+        return errorHandler;
     }
 
     @Bean
@@ -65,15 +91,5 @@ public class KafkaConsumerConfig {
         Map<String, Object> configs = new HashMap<>();
         configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         return new KafkaAdmin(configs);
-    }
-
-    @Bean
-    @ConditionalOnExpression("T(org.springframework.util.StringUtils).hasText('${spring.kafka.bootstrap-servers:}')")
-    public NewTopic notificationsTopic() {
-        return TopicBuilder.name("notifications")
-                .partitions(3)
-                .replicas(1)
-                .config(TopicConfig.RETENTION_MS_CONFIG, "604800000")
-                .build();
     }
 }

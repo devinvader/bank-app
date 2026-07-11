@@ -150,6 +150,9 @@ bank-gateway:
       FRONT_UI_ORIGIN: "http://localhost"
       KEYCLOAK_HOST: keycloak
       KEYCLOAK_PORT: "80"
+      ACCOUNTS_SERVICE_URL: "http://bank-accounts"
+      CASH_SERVICE_URL: "http://bank-cash"
+      TRANSFER_SERVICE_URL: "http://bank-transfer"
 
 bank-front-ui:
   enabled: true

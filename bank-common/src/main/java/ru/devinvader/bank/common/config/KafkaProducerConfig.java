@@ -40,6 +40,8 @@ public class KafkaProducerConfig {
     @Bean
     public KafkaTemplate<String, NotificationRequest> notificationKafkaTemplate(
             ProducerFactory<String, NotificationRequest> notificationProducerFactory) {
-        return new KafkaTemplate<>(notificationProducerFactory);
+        var template = new KafkaTemplate<>(notificationProducerFactory);
+        template.setObservationEnabled(true);
+        return template;
     }
 }

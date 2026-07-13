@@ -1,6 +1,9 @@
 package ru.devinvader.bank.transfer.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.devinvader.bank.common.client.AccountsClient;
@@ -22,6 +25,7 @@ import java.util.UUID;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class TransferServiceImpl implements TransferService {
     private final TransferRepository repository;
     private final AccountsClient accountsClient;
@@ -29,20 +33,11 @@ public class TransferServiceImpl implements TransferService {
     private final NotificationMessages notificationMessages;
     private final TransferMapper transferMapper;
 
-    public TransferServiceImpl(TransferRepository repository,
-                               AccountsClient accountsClient,
-                               NotificationClient notificationClient,
-                               NotificationMessages notificationMessages,
-                               TransferMapper transferMapper) {
-        this.repository = repository;
-        this.accountsClient = accountsClient;
-        this.notificationClient = notificationClient;
-        this.notificationMessages = notificationMessages;
-        this.transferMapper = transferMapper;
-    }
-
     @Override
     @Transactional
+    @Timed(value = "bank.transfer", description = "Процесс перевода денег")
+    @Counted(value = "bank.transfer.failed", recordFailuresOnly = true,
+            description = "Переводы, завершившиеся ошибкой")
     public TransferResponse execute(UUID fromAccountId, TransferRequest request) {
         var transfer = transferMapper.toEntity(fromAccountId, request);
         transfer = repository.save(transfer);
@@ -62,6 +57,8 @@ public class TransferServiceImpl implements TransferService {
 
     @Override
     @Transactional
+    @Counted(value = "bank.transfer.retry", extraTags = {"type", "retry"},
+            description = "Попыток повторить перевод, завершившийся ошибкой")
     public TransferResponse retryTransfer(TransferRecord existing) {
         var transfer = existing.toBuilder()
                 .status(TransferStatus.PENDING)
@@ -73,6 +70,8 @@ public class TransferServiceImpl implements TransferService {
 
     @Override
     @Transactional
+    @Counted(value = "bank.transfer.retry", extraTags = {"type", "resume"},
+            description = "Попыток возобновить перевод, завершившийся ошибкой")
     public TransferResponse resumeTransfer(TransferRecord existing) {
         var transfer = existing.toBuilder()
                 .status(TransferStatus.PENDING)

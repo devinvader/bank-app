@@ -17,3 +17,7 @@ service:
       ACCOUNTS_SERVICE_URL: "http://bank-accounts"
       CASH_SERVICE_URL: "http://bank-cash"
       TRANSFER_SERVICE_URL: "http://bank-transfer"
+      SPRING_PROFILES_ACTIVE: logstash
+      ZIPKIN_ENDPOINT: "http://zipkin:9411/api/v2/spans"
+      LOGSTASH_HOST: logstash
+      LOGSTASH_PORT: "5000"

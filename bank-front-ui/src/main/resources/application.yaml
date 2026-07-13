@@ -46,6 +46,10 @@ resilience4j:
     instances:
       accountsGateway:
         base-config: default
+        ignore-exceptions:
+          - ru.devinvader.bank.frontui.exception.InsufficientFundsException
+          - ru.devinvader.bank.frontui.exception.BadRequestException
+          - ru.devinvader.bank.frontui.exception.UnauthorizedException
       cashGateway:
         base-config: default
         ignore-exceptions:
@@ -76,9 +80,6 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
-    distribution:
-      percentiles-histogram:
-        http.server.requests: true
   tracing:
     sampling:
       probability: 1.0

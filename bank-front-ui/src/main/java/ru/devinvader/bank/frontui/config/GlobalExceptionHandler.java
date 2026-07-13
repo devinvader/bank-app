@@ -2,6 +2,7 @@ package ru.devinvader.bank.frontui.config;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.ui.Model;
@@ -24,7 +25,7 @@ public class GlobalExceptionHandler {
         response.sendRedirect("/oauth2/authorization/keycloak");
     }
 
-    @ExceptionHandler(ServiceUnavailableException.class)
+    @ExceptionHandler({ServiceUnavailableException.class, CallNotPermittedException.class})
     public String handleServiceUnavailable(Model model) {
         model.addAttribute("errors", List.of("Сервис временно недоступен. Попробуйте позже."));
         return "error";

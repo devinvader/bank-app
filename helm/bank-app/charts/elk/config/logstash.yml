@@ -1,1 +1,1 @@
-http.host: "localhost"
+api.http.host: "0.0.0.0"

@@ -24,6 +24,14 @@ spec:
           env:
             - name: discovery.type
               value: single-node
+            - name: xpack.security.enabled
+              value: "false"
+            - name: xpack.ml.enabled
+              value: "false"
+            - name: bootstrap.memory_lock
+              value: "false"
+            - name: ES_JAVA_OPTS
+              value: {{ .Values.elasticsearch.javaOpts | quote }}
           readinessProbe:
             httpGet:
               path: /_cluster/health?local=true

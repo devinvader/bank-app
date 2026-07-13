@@ -5,6 +5,7 @@ elasticsearch:
   service:
     name: elasticsearch
     port: 9200
+  javaOpts: "-Xms512m -Xmx512m"
 
 logstash:
   image:
@@ -14,6 +15,7 @@ logstash:
     name: logstash
     tcpPort: 5000
     apiPort: 9600
+  javaOpts: "-Xms256m -Xmx256m"
   index: "bank-logs"
 
 kibana:

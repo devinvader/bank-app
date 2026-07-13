@@ -20,6 +20,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,15 +35,30 @@ public class AccountServiceImpl implements AccountService {
     private final AccountMapper accountMapper;
 
     @Override
-    public AccountResponse getById(UUID accountId) {
-        var account = repository.findById(accountId)
-                .orElseGet(() -> createDefaultAccount(accountId));
+    public AccountResponse getCurrentOrCreate(UUID currentUserId) {
+        var account = repository.findById(currentUserId)
+                .orElseGet(() -> createDefaultAccount(currentUserId));
         return accountMapper.toResponse(account);
     }
 
     @Override
-    public List<AccountResponse> getTransferTargets(UUID excludeAccountId) {
-        return repository.findAllByIdNot(excludeAccountId).stream()
+    public AccountResponse getById(UUID accountId) {
+        var account = repository.findById(accountId)
+                .orElseThrow(() -> new AccountNotFoundException(accountId));
+        return accountMapper.toResponse(account);
+    }
+
+    @Override
+    public List<UUID> findMissingAccounts(Collection<UUID> accountIds) {
+        var existing = new HashSet<>(repository.findExistingIds(accountIds));
+        return accountIds.stream()
+                .filter(id -> !existing.contains(id))
+                .distinct()
+                .toList();
+    }
+
+    @Override
+    public List<AccountResponse> getTransferTargets(UUID excludeAccountId) {        return repository.findAllByIdNot(excludeAccountId).stream()
                 .map(accountMapper::toResponse)
                 .toList();
     }
@@ -58,12 +75,8 @@ public class AccountServiceImpl implements AccountService {
                 .updatedAt(Instant.now())
                 .build();
         var result = accountMapper.toResponse(repository.save(account));
-        try {
-            notificationClient.send(NotificationType.PROFILE_UPDATE, accountId, BigDecimal.ZERO,
-                    notificationMessages.forProfileUpdate(accountId));
-        } catch (Exception e) {
-            log.error("Failed to send notification: {}", e.getMessage());
-        }
+        notificationClient.send(NotificationType.PROFILE_UPDATE, accountId, BigDecimal.ZERO,
+                notificationMessages.forProfileUpdate(accountId));
         return result;
     }
 
@@ -72,30 +85,19 @@ public class AccountServiceImpl implements AccountService {
     public void debit(UUID accountId, BigDecimal amount) {
         var account = repository.findById(accountId)
                 .orElseThrow(() -> new AccountNotFoundException(accountId));
-        if (account.balance().compareTo(amount) < 0) {
+        int updated = repository.debit(accountId, amount, Instant.now());
+        if (updated == 0) {
             throw new InsufficientBalanceException(amount, account.balance());
         }
-        account = account.toBuilder()
-                .balance(account.balance().subtract(amount))
-                .updatedAt(Instant.now())
-                .build();
-        repository.save(account);
-        notificationClient.send(NotificationType.WITHDRAWAL, accountId, amount,
-                notificationMessages.forWithdrawal(accountId, amount));
     }
 
     @Override
     @Transactional
     public void credit(UUID accountId, BigDecimal amount) {
-        var account = repository.findById(accountId)
-                .orElseThrow(() -> new AccountNotFoundException(accountId));
-        account = account.toBuilder()
-                .balance(account.balance().add(amount))
-                .updatedAt(Instant.now())
-                .build();
-        repository.save(account);
-        notificationClient.send(NotificationType.DEPOSIT, accountId, amount,
-                notificationMessages.forDeposit(accountId, amount));
+        int updated = repository.credit(accountId, amount, Instant.now());
+        if (updated == 0) {
+            throw new AccountNotFoundException(accountId);
+        }
     }
 
     private void validateAge(LocalDate birthdate) {

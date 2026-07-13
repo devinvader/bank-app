@@ -17,12 +17,12 @@ class NotificationMapperTest {
     @Test
     void toEntity_shouldMapAllFields() {
         var accountId = UUID.fromString("00000000-0000-0000-0000-000000000001");
-        var request = new NotificationRequest(NotificationType.DEPOSIT, accountId,
+        var request = new NotificationRequest(NotificationType.CASH_DEPOSIT, accountId,
                 BigDecimal.valueOf(500), "Deposit of 500");
 
         var entity = mapper.toEntity(request);
 
-        assertThat(entity.type()).isEqualTo(NotificationType.DEPOSIT);
+        assertThat(entity.type()).isEqualTo(NotificationType.CASH_DEPOSIT);
         assertThat(entity.accountId()).isEqualTo(accountId);
         assertThat(entity.amount()).isEqualTo(BigDecimal.valueOf(500));
         assertThat(entity.message()).isEqualTo("Deposit of 500");
@@ -34,12 +34,12 @@ class NotificationMapperTest {
     @Test
     void toEntity_withTransferType_shouldMapCorrectly() {
         var accountId = UUID.fromString("00000000-0000-0000-0000-000000000002");
-        var request = new NotificationRequest(NotificationType.TRANSFER, accountId,
+        var request = new NotificationRequest(NotificationType.TRANSFER_SENT, accountId,
                 BigDecimal.valueOf(1000), "Transfer sent");
 
         var entity = mapper.toEntity(request);
 
-        assertThat(entity.type()).isEqualTo(NotificationType.TRANSFER);
+        assertThat(entity.type()).isEqualTo(NotificationType.TRANSFER_SENT);
         assertThat(entity.accountId()).isEqualTo(accountId);
         assertThat(entity.retryCount()).isZero();
     }

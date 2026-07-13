@@ -23,6 +23,12 @@ spring:
         jwt:
           jwk-set-uri: http://${KEYCLOAK_HOST:keycloak}:${KEYCLOAK_PORT:8089}/realms/${KEYCLOAK_REALM:bank}/protocol/openid-connect/certs
 
+gateway:
+  routes:
+    accounts-url: ${ACCOUNTS_SERVICE_URL:http://bank-accounts}
+    cash-url: ${CASH_SERVICE_URL:http://bank-cash}
+    transfer-url: ${TRANSFER_SERVICE_URL:http://bank-transfer}
+
 resilience4j:
   timelimiter:
     configs:

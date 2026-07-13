@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import ru.devinvader.bank.common.exception.AccountNotFoundException;
 import ru.devinvader.bank.common.exception.InsufficientBalanceException;
 
 @RestControllerAdvice
@@ -19,6 +20,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ProblemDetail> handleInsufficientBalance(InsufficientBalanceException ex) {
         var problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
         problem.setTitle("Insufficient balance");
+        return ResponseEntity.badRequest().body(problem);
+    }
+
+    @ExceptionHandler(AccountNotFoundException.class)
+    public ResponseEntity<ProblemDetail> handleAccountNotFound(AccountNotFoundException ex) {
+        var problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setTitle("Account not found");
         return ResponseEntity.badRequest().body(problem);
     }
 

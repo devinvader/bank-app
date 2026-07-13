@@ -9,15 +9,16 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.yaml
   lifecycle:
     timeout-per-shutdown-phase: 30s
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          jwk-set-uri: http://${KEYCLOAK_HOST:keycloak}:${KEYCLOAK_PORT:8089}/realms/${KEYCLOAK_REALM:bank}/protocol/openid-connect/certs
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
 
-outbox:
-  scheduler:
-    interval: 5000
+kafka:
+  topic:
+    notifications:
+      name: ${KAFKA_TOPIC_NOTIFICATIONS:notifications}
+      partitions: ${KAFKA_TOPIC_NOTIFICATIONS_PARTITIONS:3}
+      replicas: ${KAFKA_TOPIC_NOTIFICATIONS_REPLICAS:1}
+      retention-ms: ${KAFKA_TOPIC_NOTIFICATIONS_RETENTION_MS:604800000}
 
 server:
   port: ${SERVER_PORT:8085}

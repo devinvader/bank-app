@@ -1,0 +1,13 @@
+kafka:
+  fullnameOverride: kafka
+  image:
+    repository: docker.io/apache/kafka
+    tag: "3.9.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+  config:
+    singleBroker: advertised.listeners=CLIENT://kafka-0.kafka-headless:9092
+  singleBroker:
+    persistence:
+      size: 2Gi

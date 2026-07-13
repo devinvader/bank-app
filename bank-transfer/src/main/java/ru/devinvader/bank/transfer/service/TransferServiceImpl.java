@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.devinvader.bank.common.client.AccountsClient;
 import ru.devinvader.bank.common.client.NotificationClient;
+import ru.devinvader.bank.common.exception.AccountNotFoundException;
 import ru.devinvader.bank.common.exception.InsufficientBalanceException;
 import ru.devinvader.bank.common.model.NotificationMessages;
 import ru.devinvader.bank.common.model.NotificationType;
@@ -45,7 +46,18 @@ public class TransferServiceImpl implements TransferService {
     public TransferResponse execute(UUID fromAccountId, TransferRequest request) {
         var transfer = transferMapper.toEntity(fromAccountId, request);
         transfer = repository.save(transfer);
-        return processTransfer(transfer);
+
+        var missing = accountsClient.findMissingAccounts(List.of(fromAccountId, request.toAccountId()));
+        if (!missing.isEmpty()) {
+            transfer = transfer.toBuilder()
+                    .status(TransferStatus.REJECTED)
+                    .completedAt(Instant.now())
+                    .build();
+            repository.save(transfer);
+            throw new AccountNotFoundException("Accounts not found: " + missing);
+        }
+
+        return processTransfer(transfer, false);
     }
 
     @Override
@@ -56,15 +68,28 @@ public class TransferServiceImpl implements TransferService {
                 .retryCount(existing.retryCount() + 1)
                 .build();
         transfer = repository.save(transfer);
-        return processTransfer(transfer);
+        return processTransfer(transfer, false);
     }
 
-    private TransferResponse processTransfer(TransferRecord transfer) {
-        var debitSucceeded = false;
+    @Override
+    @Transactional
+    public TransferResponse resumeTransfer(TransferRecord existing) {
+        var transfer = existing.toBuilder()
+                .status(TransferStatus.PENDING)
+                .retryCount(existing.retryCount() + 1)
+                .build();
+        transfer = repository.save(transfer);
+        return processTransfer(transfer, true);
+    }
+
+    private TransferResponse processTransfer(TransferRecord transfer, boolean skipDebit) {
+        var debitSucceeded = skipDebit;
         try {
-            accountsClient.debit(transfer.fromAccount(), transfer.amount());
-            debitSucceeded = true;
-            accountsClient.credit(transfer.toAccount(), transfer.amount());
+            if (!skipDebit) {
+                debit(transfer);
+                debitSucceeded = true;
+            }
+            credit(transfer);
 
             transfer = transfer.toBuilder()
                     .status(TransferStatus.COMPLETED)
@@ -72,46 +97,60 @@ public class TransferServiceImpl implements TransferService {
                     .build();
             transfer = repository.save(transfer);
 
-            try {
-                notificationClient.send(NotificationType.TRANSFER, transfer.fromAccount(), transfer.amount(),
-                        notificationMessages.forTransferSent(transfer.toAccount(), transfer.amount()));
-            } catch (Exception e) {
-                log.error("Failed to send notification: {}", e.getMessage());
-            }
-            try {
-                notificationClient.send(NotificationType.TRANSFER, transfer.toAccount(), transfer.amount(),
-                        notificationMessages.forTransferReceived(transfer.fromAccount(), transfer.amount()));
-            } catch (Exception e) {
-                log.error("Failed to send notification: {}", e.getMessage());
-            }
+            notifyParticipants(transfer);
 
             return transferMapper.toResponse(transfer);
         } catch (InsufficientBalanceException e) {
             transfer = transfer.toBuilder()
-                    .status(TransferStatus.COMPLETED)
+                    .status(TransferStatus.REJECTED)
                     .completedAt(Instant.now())
                     .build();
             repository.save(transfer);
             throw e;
         } catch (Exception e) {
             log.error("Transfer failed: {}", e.getMessage());
+            var compensated = false;
             if (debitSucceeded) {
-                try {
-                    accountsClient.credit(transfer.fromAccount(), transfer.amount());
-                    log.info("Compensation: credited back {} to {}", transfer.amount(), transfer.fromAccount());
-                } catch (Exception compEx) {
-                    log.error("Compensation failed: {}", compEx.getMessage());
-                }
+                compensated = compensate(transfer);
             }
 
+            var status = debitSucceeded && !compensated
+                    ? TransferStatus.COMPENSATION_FAILED
+                    : TransferStatus.FAILED;
             transfer = transfer.toBuilder()
-                    .status(TransferStatus.FAILED)
+                    .status(status)
                     .completedAt(Instant.now())
                     .build();
             repository.save(transfer);
 
             throw new RuntimeException("Transfer failed: " + e.getMessage(), e);
         }
+    }
+
+    private void debit(TransferRecord transfer) {
+        accountsClient.debit(transfer.fromAccount(), transfer.amount());
+    }
+
+    private void credit(TransferRecord transfer) {
+        accountsClient.credit(transfer.toAccount(), transfer.amount());
+    }
+
+    private boolean compensate(TransferRecord transfer) {
+        try {
+            accountsClient.credit(transfer.fromAccount(), transfer.amount());
+            log.info("Compensation: credited back {} to {}", transfer.amount(), transfer.fromAccount());
+            return true;
+        } catch (Exception e) {
+            log.error("Compensation failed: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    private void notifyParticipants(TransferRecord transfer) {
+        notificationClient.send(NotificationType.TRANSFER_SENT, transfer.fromAccount(), transfer.amount(),
+                notificationMessages.forTransferSent(transfer.toAccount(), transfer.amount()));
+        notificationClient.send(NotificationType.TRANSFER_RECEIVED, transfer.toAccount(), transfer.amount(),
+                notificationMessages.forTransferReceived(transfer.fromAccount(), transfer.amount()));
     }
 
     @Override

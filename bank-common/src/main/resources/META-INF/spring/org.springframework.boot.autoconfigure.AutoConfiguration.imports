@@ -1,2 +1,3 @@
 ru.devinvader.bank.common.config.BankCommonAutoConfiguration
 ru.devinvader.bank.common.config.WebClientAutoConfiguration
+ru.devinvader.bank.common.config.KafkaProducerConfig

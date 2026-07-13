@@ -47,3 +47,29 @@ for svc in "${SERVICES[@]}"; do
     echo "Loading ${svc}:latest"
     kind load docker-image "${svc}:latest" --name "${CLUSTER_NAME}"
 done
+
+# подготовка образов чтобы они не качались во время helm --wait
+SUB_CHARTS_IMAGES=(
+    "docker.io/library/postgres:15"
+    "docker.io/library/redis:7-alpine"
+    "quay.io/keycloak/keycloak:latest"
+    "docker.io/apache/kafka:3.9.0"
+)
+NODES=$(kind get nodes --name "${CLUSTER_NAME}")
+for node in ${NODES}; do
+    for img in "${SUB_CHARTS_IMAGES[@]}"; do
+        echo "пулл ${img}"
+        pulled=false
+        for attempt in 1 2 3; do
+            echo "попытка ${attempt}..."
+            if docker exec "${node}" crictl pull "${img}"; then
+                pulled=true
+                break
+            fi
+            sleep 5
+        done
+        if [ "${pulled}" = false ]; then
+            echo "Не удалось предзагрузить ${img}"
+        fi
+    done
+done

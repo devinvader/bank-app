@@ -8,6 +8,8 @@ import ru.devinvader.bank.accounts.model.AccountRequest;
 import ru.devinvader.bank.accounts.model.AccountResponse;
 import ru.devinvader.bank.accounts.model.BalanceRequest;
 import ru.devinvader.bank.accounts.service.AccountService;
+import ru.devinvader.bank.common.model.AccountsExistenceRequest;
+import ru.devinvader.bank.common.model.AccountsExistenceResponse;
 import ru.devinvader.bank.common.security.CurrentUser;
 
 import java.util.List;
@@ -22,12 +24,19 @@ public class AccountController {
 
     @GetMapping("/me")
     public ResponseEntity<AccountResponse> getCurrentAccount(@CurrentUser UUID accountId) {
-        return ResponseEntity.ok(accountService.getById(accountId));
+        return ResponseEntity.ok(accountService.getCurrentOrCreate(accountId));
     }
 
     @GetMapping("/{accountId}")
     public ResponseEntity<AccountResponse> getById(@PathVariable UUID accountId) {
         return ResponseEntity.ok(accountService.getById(accountId));
+    }
+
+    @PostMapping("/exists")
+    public ResponseEntity<AccountsExistenceResponse> checkExistence(
+            @Valid @RequestBody AccountsExistenceRequest request) {
+        var missing = accountService.findMissingAccounts(request.accountIds());
+        return ResponseEntity.ok(new AccountsExistenceResponse(missing));
     }
 
     @PutMapping("/me")

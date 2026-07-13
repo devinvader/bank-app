@@ -3,10 +3,12 @@ package ru.devinvader.bank.accounts.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.devinvader.bank.accounts.mapper.AccountMapper;
 import org.springframework.context.support.ResourceBundleMessageSource;
+import ru.devinvader.bank.accounts.exception.AccountNotFoundException;
 import ru.devinvader.bank.common.client.NotificationClient;
 import ru.devinvader.bank.common.model.NotificationMessages;
 import ru.devinvader.bank.accounts.exception.AgeValidationException;
@@ -25,6 +27,9 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -61,12 +66,23 @@ class AccountServiceTest {
     }
 
     @Test
-    void getById_nonExistingId_shouldCreateDefault() {
+    void getById_nonExistingId_shouldThrow() {
+        UUID id = UUID.randomUUID();
+        when(repository.findById(id)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.getById(id))
+                .isInstanceOf(AccountNotFoundException.class);
+
+        verify(repository, never()).save(any(Account.class));
+    }
+
+    @Test
+    void getCurrentOrCreate_nonExistingId_shouldCreateDefault() {
         UUID id = UUID.randomUUID();
         when(repository.findById(id)).thenReturn(Optional.empty());
         when(repository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        var result = service.getById(id);
+        var result = service.getCurrentOrCreate(id);
 
         assertThat(result).isNotNull();
         assertThat(result.accountId()).isEqualTo(id);
@@ -75,13 +91,43 @@ class AccountServiceTest {
     }
 
     @Test
+    void findMissingAccounts_allExist_shouldReturnEmpty() {
+        UUID id1 = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
+        UUID id2 = UUID.fromString("447129a6-bf9b-4dcd-9b35-36d192bb525a");
+        when(repository.findExistingIds(List.of(id1, id2))).thenReturn(List.of(id1, id2));
+
+        var result = service.findMissingAccounts(List.of(id1, id2));
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void findMissingAccounts_someMissing_shouldReturnMissing() {
+        UUID existing = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
+        UUID missing = UUID.fromString("00000000-0000-0000-0000-000000000000");
+        when(repository.findExistingIds(List.of(existing, missing))).thenReturn(List.of(existing));
+
+        var result = service.findMissingAccounts(List.of(existing, missing));
+
+        assertThat(result).containsExactly(missing);
+    }
+
+    @Test
     void debit_sufficientBalance_shouldDecreaseBalance() {
         UUID id = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
         var account = account(id, "Иван", BigDecimal.valueOf(1000));
         when(repository.findById(id)).thenReturn(Optional.of(account));
-        when(repository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(repository.debit(eq(id), eq(BigDecimal.valueOf(300)), any(Instant.class))).thenReturn(1);
 
         service.debit(id, BigDecimal.valueOf(300));
+
+        var idCaptor = ArgumentCaptor.forClass(UUID.class);
+        var amountCaptor = ArgumentCaptor.forClass(BigDecimal.class);
+        verify(repository).debit(idCaptor.capture(), amountCaptor.capture(), any(Instant.class));
+        assertThat(idCaptor.getValue()).isEqualTo(id);
+        assertThat(amountCaptor.getValue()).isEqualByComparingTo(BigDecimal.valueOf(300));
+
+        verify(notificationClient, never()).send(any(), any(), any(), any());
     }
 
     @Test
@@ -89,19 +135,40 @@ class AccountServiceTest {
         UUID id = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
         var account = account(id, "Иван", BigDecimal.valueOf(100));
         when(repository.findById(id)).thenReturn(Optional.of(account));
+        when(repository.debit(eq(id), eq(BigDecimal.valueOf(500)), any(Instant.class))).thenReturn(0);
 
         assertThatThrownBy(() -> service.debit(id, BigDecimal.valueOf(500)))
                 .isInstanceOf(InsufficientBalanceException.class);
+        // Неизменность в этом случае баланса будет гарантироваться репозиторием, 
+        // см AccountRepostoryTest#debit_insufficientBalance_shouldNotChangeBalanceAndReturnZero
+        verify(notificationClient, never()).send(any(), any(), any(), any());
     }
 
     @Test
     void credit_shouldIncreaseBalance() {
         UUID id = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
-        var account = account(id, "Иван", BigDecimal.valueOf(500));
-        when(repository.findById(id)).thenReturn(Optional.of(account));
-        when(repository.save(any(Account.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(repository.credit(eq(id), eq(BigDecimal.valueOf(200)), any(Instant.class))).thenReturn(1);
 
         service.credit(id, BigDecimal.valueOf(200));
+
+        var idCaptor = ArgumentCaptor.forClass(UUID.class);
+        var amountCaptor = ArgumentCaptor.forClass(BigDecimal.class);
+        verify(repository).credit(idCaptor.capture(), amountCaptor.capture(), any(Instant.class));
+        assertThat(idCaptor.getValue()).isEqualTo(id);
+        assertThat(amountCaptor.getValue()).isEqualByComparingTo(BigDecimal.valueOf(200));
+
+        verify(notificationClient, never()).send(any(), any(), any(), any());
+    }
+
+    @Test
+    void credit_accountNotFound_shouldThrow() {
+        UUID id = UUID.fromString("afd94176-3179-4285-9f6b-96fd9131628a");
+        when(repository.credit(eq(id), eq(BigDecimal.valueOf(200)), any(Instant.class))).thenReturn(0);
+
+        assertThatThrownBy(() -> service.credit(id, BigDecimal.valueOf(200)))
+                .isInstanceOf(AccountNotFoundException.class);
+
+        verify(notificationClient, never()).send(any(), any(), any(), any());
     }
 
     @Test
@@ -115,6 +182,13 @@ class AccountServiceTest {
         var result = service.update(id, request);
 
         assertThat(result.name()).isEqualTo("Новое Имя");
+
+        var accountCaptor = ArgumentCaptor.forClass(Account.class);
+        verify(repository).save(accountCaptor.capture());
+        var saved = accountCaptor.getValue();
+        assertThat(saved.name()).isEqualTo("Новое Имя");
+        assertThat(saved.birthdate()).isEqualTo(LocalDate.of(1990, 1, 1));
+        assertThat(saved.balance()).isEqualByComparingTo(BigDecimal.valueOf(100));
     }
 
     @Test

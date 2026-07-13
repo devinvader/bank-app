@@ -11,12 +11,16 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import ru.devinvader.bank.common.model.AccountsExistenceResponse;
 import ru.devinvader.bank.commontest.config.AbstractTestcontainersConfiguration;
 import ru.devinvader.bank.transfer.config.TestSecurityConfig;
 import ru.devinvader.bank.transfer.repository.TransferRepository;
 
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -55,5 +59,7 @@ public abstract class TransferControllerBase {
         when(responseSpec.onStatus(any(), any())).thenReturn(responseSpec);
         when(responseSpec.toBodilessEntity())
                 .thenReturn(Mono.just(ResponseEntity.ok().build()));
+        when(responseSpec.bodyToMono(eq(AccountsExistenceResponse.class)))
+                .thenReturn(Mono.just(new AccountsExistenceResponse(List.of())));
     }
 }

@@ -13,5 +13,7 @@ public interface TransferService {
 
     TransferResponse retryTransfer(TransferRecord existing);
 
+    TransferResponse resumeTransfer(TransferRecord existing);
+
     List<TransferResponse> getHistory(UUID accountId);
 }

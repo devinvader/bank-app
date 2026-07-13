@@ -1,0 +1,6 @@
+dependencies:
+- name: kafka
+  repository: oci://ghcr.io/helmforgedev/helm
+  version: 1.3.14
+digest: sha256:c591cb5ce93d98a01b4cbfd39e2cb063c69a01509afa06ae0d20521a0fee958f
+generated: "2026-07-09T09:34:46.788524639+03:00"

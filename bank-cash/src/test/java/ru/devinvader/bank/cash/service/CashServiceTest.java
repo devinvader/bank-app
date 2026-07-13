@@ -12,6 +12,7 @@ import ru.devinvader.bank.cash.mapper.CashMapper;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import ru.devinvader.bank.common.client.AccountsClient;
 import ru.devinvader.bank.common.client.NotificationClient;
+import ru.devinvader.bank.common.exception.AccountNotFoundException;
 import ru.devinvader.bank.common.model.NotificationMessages;
 import ru.devinvader.bank.common.model.AccountResponse;
 import ru.devinvader.bank.cash.model.CashOperation;
@@ -154,6 +155,28 @@ class CashServiceTest {
     }
 
     @Test
+    void deposit_whenAccountNotFound_shouldPropagateAccountNotFound() {
+        doThrow(new AccountNotFoundException("account not found: " + ACCOUNT_ID))
+                .when(accountsClient).credit(any(UUID.class), any(BigDecimal.class));
+
+        var request = new CashRequest(BigDecimal.valueOf(100));
+
+        assertThatThrownBy(() -> service.deposit(ACCOUNT_ID, request))
+                .isInstanceOf(AccountNotFoundException.class);
+    }
+
+    @Test
+    void withdraw_whenAccountNotFound_shouldPropagateAccountNotFound() {
+        doThrow(new AccountNotFoundException("account not found: " + ACCOUNT_ID))
+                .when(accountsClient).debit(any(UUID.class), any(BigDecimal.class));
+
+        var request = new CashRequest(BigDecimal.valueOf(100));
+
+        assertThatThrownBy(() -> service.withdraw(ACCOUNT_ID, request))
+                .isInstanceOf(AccountNotFoundException.class);
+    }
+
+    @Test
     void deposit_shouldSendNotification() {
         stubSuccessfulOperation(BigDecimal.valueOf(1100));
 
@@ -171,17 +194,5 @@ class CashServiceTest {
         service.withdraw(ACCOUNT_ID, request);
 
         verify(notificationClient).send(any(), any(UUID.class), any(), anyString());
-    }
-
-    @Test
-    void notificationFailure_shouldNotCrashDeposit() {
-        stubSuccessfulOperation(BigDecimal.valueOf(1100));
-        doThrow(new RuntimeException("Notification failed"))
-                .when(notificationClient).send(any(), any(UUID.class), any(), anyString());
-
-        var request = new CashRequest(BigDecimal.valueOf(100));
-        var response = service.deposit(ACCOUNT_ID, request);
-
-        assertThat(response.type()).isEqualTo(CashOperationType.DEPOSIT);
     }
 }

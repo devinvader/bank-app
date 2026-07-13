@@ -20,10 +20,12 @@ spring:
             client-id: bank-transfer
             client-secret: ${KEYCLOAK_CLIENT_SECRET:transfer-secret}
             authorization-grant-type: client_credentials
-            scope: openid,accounts:read,accounts:write,notifications:send
+            scope: openid,accounts:read,accounts:write
         provider:
           keycloak:
             token-uri: http://${KEYCLOAK_HOST:keycloak}:${KEYCLOAK_PORT:8089}/realms/${KEYCLOAK_REALM:bank}/protocol/openid-connect/token
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
 
 resilience4j:
   circuitbreaker:
@@ -38,11 +40,12 @@ resilience4j:
         base-config: default
         ignore-exceptions:
           - ru.devinvader.bank.common.exception.InsufficientBalanceException
-      notificationService:
-        base-config: default
+          - ru.devinvader.bank.common.exception.AccountNotFoundException
 
-notifications:
-  base-url: ${NOTIFICATIONS_BASE_URL:http://bank-notifications}
+kafka:
+  topic:
+    notifications:
+      name: ${KAFKA_TOPIC_NOTIFICATIONS:notifications}
 
 accounts:
   base-url: ${ACCOUNTS_BASE_URL:http://bank-accounts}

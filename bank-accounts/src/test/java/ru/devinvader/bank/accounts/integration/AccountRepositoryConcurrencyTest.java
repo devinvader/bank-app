@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -36,19 +37,15 @@ class AccountRepositoryConcurrencyTest extends BaseIntegrationTest {
 
         var threads = 5;
         var amountPerThread = BigDecimal.valueOf(300);
+        var successfulDebits = new AtomicInteger(0);
         var latch = new CountDownLatch(threads);
         try (var executor = Executors.newFixedThreadPool(threads)) {
 
             for (int i = 0; i < threads; i++) {
                 executor.submit(() -> {
                     try {
-                        var current = accountRepository.findById(accountId).orElseThrow();
-                        if (current.balance().compareTo(amountPerThread) >= 0) {
-                            var updated = current.toBuilder()
-                                    .balance(current.balance().subtract(amountPerThread))
-                                    .updatedAt(Instant.now())
-                                    .build();
-                            accountRepository.save(updated);
+                        if (accountRepository.debit(accountId, amountPerThread, Instant.now()) > 0) {
+                            successfulDebits.incrementAndGet();
                         }
                     } finally {
                         latch.countDown();
@@ -61,6 +58,7 @@ class AccountRepositoryConcurrencyTest extends BaseIntegrationTest {
         }
 
         var finalAccount = accountRepository.findById(accountId).orElseThrow();
-        assertThat(finalAccount.balance()).isGreaterThanOrEqualTo(BigDecimal.ZERO);
+        assertThat(successfulDebits.get()).isEqualTo(3);
+        assertThat(finalAccount.balance()).isEqualByComparingTo(BigDecimal.valueOf(100));
     }
 }

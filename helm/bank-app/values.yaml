@@ -68,6 +68,31 @@ keycloak:
     adminPassword: admin
     dbPassword: postgres
 
+zipkin:
+  enabled: true
+  service:
+    name: zipkin
+    port: 9411
+
+prometheus:
+  enabled: true
+  service:
+    name: prometheus
+    port: 9090
+
+grafana:
+  enabled: true
+  service:
+    name: grafana
+    port: 3000
+
+elk:
+  enabled: true
+  kibana:
+    service:
+      name: kibana
+      port: 5601
+
 bank-accounts:
   enabled: true
   replicaCount: 1

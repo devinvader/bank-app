@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.elasticsearch.service.name }}
+  labels:
+    app: {{ .Values.elasticsearch.service.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.elasticsearch.service.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.elasticsearch.service.name }}
+    spec:
+      containers:
+        - name: elasticsearch
+          image: "{{ .Values.elasticsearch.image.repository }}:{{ .Values.elasticsearch.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: {{ .Values.elasticsearch.service.port }}
+              name: http
+          env:
+            - name: discovery.type
+              value: single-node
+          readinessProbe:
+            httpGet:
+              path: /_cluster/health?local=true
+              port: {{ .Values.elasticsearch.service.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 30
+          volumeMounts:
+            - name: data
+              mountPath: /usr/share/elasticsearch/data
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.elasticsearch.service.name }}
+  labels:
+    app: {{ .Values.elasticsearch.service.name }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.elasticsearch.service.port }}
+      targetPort: {{ .Values.elasticsearch.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ .Values.elasticsearch.service.name }}

@@ -1,0 +1,10 @@
+apiVersion: v2
+name: zipkin
+description: Сервис для трасировки
+type: application
+version: 0.1.0
+appVersion: "3"
+dependencies:
+  - name: zipkin
+    version: 0.5.0
+    repository: https://zipkin.io/zipkin-helm

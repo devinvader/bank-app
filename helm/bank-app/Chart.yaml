@@ -19,6 +19,18 @@ dependencies:
   - name: keycloak
     version: 0.1.0
     condition: keycloak.enabled
+  - name: zipkin
+    version: 0.1.0
+    condition: zipkin.enabled
+  - name: prometheus
+    version: 0.1.0
+    condition: prometheus.enabled
+  - name: grafana
+    version: 0.1.0
+    condition: grafana.enabled
+  - name: elk
+    version: 0.1.0
+    condition: elk.enabled
   - name: bank-accounts
     version: 0.1.0
     condition: bank-accounts.enabled

@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.kibana.service.name }}
+  labels:
+    app: {{ .Values.kibana.service.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.kibana.service.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.kibana.service.name }}
+    spec:
+      containers:
+        - name: kibana
+          image: "{{ .Values.kibana.image.repository }}:{{ .Values.kibana.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: {{ .Values.kibana.service.port }}
+              name: http
+          env:
+            - name: ELASTICSEARCH_HOSTS
+              value: "http://{{ .Values.elasticsearch.service.name }}:{{ .Values.elasticsearch.service.port }}"
+            - name: SERVER_PUBLICBASEURL
+              value: "http://localhost/kibana"
+            - name: SERVER_BASEPATH
+              value: "/kibana"
+            - name: SERVER_REWRITEBASEPATH
+              value: "true"
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    KIBANA_URL="http://localhost:{{ .Values.kibana.service.port }}/kibana"
+                    until curl -sf "${KIBANA_URL}/api/status" > /dev/null 2>&1; do sleep 3; done
+                    curl -s -X POST "${KIBANA_URL}/api/saved_objects/index-pattern" \
+                      -H "Content-Type: application/json" \
+                      -H "kbn-xsrf: true" \
+                      -d '{"attributes":{"title":"bank-logs-*","timeFieldName":"@timestamp"}}'
+          readinessProbe:
+            httpGet:
+              path: "/kibana/api/status"
+              port: {{ .Values.kibana.service.port }}
+            initialDelaySeconds: 40
+            periodSeconds: 10
+            failureThreshold: 40
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.kibana.service.name }}
+  labels:
+    app: {{ .Values.kibana.service.name }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.kibana.service.port }}
+      targetPort: {{ .Values.kibana.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ .Values.kibana.service.name }}

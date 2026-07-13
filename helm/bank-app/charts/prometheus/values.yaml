@@ -1,0 +1,76 @@
+prometheus:
+  server:
+    fullnameOverride: prometheus
+    prefixURL: /prometheus
+    baseURL: http://localhost/prometheus
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+    persistentVolume:
+      enabled: false
+    extraConfigmapMounts:
+      - name: prometheus-custom-alerts
+        mountPath: /etc/config/custom
+        configMap: prometheus-custom-alert-rules
+        readOnly: true
+    service:
+      servicePort: 9090
+  alertmanager:
+    enabled: false
+  kube-state-metrics:
+    enabled: false
+  prometheus-node-exporter:
+    enabled: false
+  prometheus-pushgateway:
+    enabled: false
+  scrapeConfigs:
+    prometheus:
+      enabled: true
+      metrics_path: /prometheus/metrics
+      static_configs:
+        - targets:
+            - localhost:9090
+    kubernetes-api-servers:
+      enabled: false
+    kubernetes-nodes:
+      enabled: false
+    kubernetes-nodes-cadvisor:
+      enabled: false
+    kubernetes-service-endpoints:
+      enabled: false
+    kubernetes-service-endpoints-slow:
+      enabled: false
+    prometheus-pushgateway:
+      enabled: false
+    kubernetes-services:
+      enabled: false
+    kubernetes-pods:
+      enabled: false
+    kubernetes-pods-slow:
+      enabled: false
+    bank-microservices:
+      enabled: true
+      metrics_path: /actuator/prometheus
+      static_configs:
+        - targets:
+            - bank-front-ui:80
+            - bank-gateway:80
+            - bank-accounts:80
+            - bank-cash:80
+            - bank-transfer:80
+            - bank-notifications:80
+      relabel_configs: # небольшой хак для лейблов
+        - source_labels: [__address__]
+          regex: '([^:]+):.*'
+          target_label: service
+          replacement: '$1'
+
+  serverFiles:
+    prometheus.yml:
+      rule_files:
+        - /etc/config/recording_rules.yml
+        - /etc/config/alerting_rules.yml
+        - /etc/config/rules
+        - /etc/config/alerts
+        # для алертов
+        - /etc/config/custom/alerting_rules.yml

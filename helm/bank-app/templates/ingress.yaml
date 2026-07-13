@@ -49,4 +49,32 @@ spec:
                 name: {{ .Values.keycloak.service.name }}
                 port:
                   number: {{ .Values.keycloak.service.port }}
+          - path: /zipkin
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.zipkin.service.name }}
+                port:
+                  number: {{ .Values.zipkin.service.port }}
+          - path: /prometheus
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.prometheus.service.name }}
+                port:
+                  number: {{ .Values.prometheus.service.port }}
+          - path: /grafana
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.grafana.service.name }}
+                port:
+                  number: {{ .Values.grafana.service.port }}
+          - path: /kibana
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Values.elk.kibana.service.name }}
+                port:
+                  number: {{ .Values.elk.kibana.service.port }}
 {{- end }}

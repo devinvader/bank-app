@@ -1,0 +1,16 @@
+service:
+  name: zipkin
+  port: 9411
+
+zipkin:
+  fullnameOverride: zipkin
+  image:
+    repository: openzipkin/zipkin
+    tag: "3"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 9411
+  zipkin:
+    storage:
+      type: mem

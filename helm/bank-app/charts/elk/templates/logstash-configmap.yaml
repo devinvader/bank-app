@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.logstash.service.name }}-config
+  labels:
+    app: {{ .Values.logstash.service.name }}
+data:
+  logstash.yml: |
+{{ .Files.Get "config/logstash.yml" | indent 4 }}
+  pipeline.conf: |
+{{ tpl (.Files.Get "config/pipeline.conf") . | indent 4 }}

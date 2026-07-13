@@ -130,6 +130,10 @@ helm/bank-app/
     ├── redis/ - Redis
     ├── kafka/ - Apache Kafka
     ├── keycloak/ - Keycloak
+    ├── zipkin/ - Zipkin
+    ├── prometheus/ - Prometheus
+    ├── grafana/ - Grafana
+    ├── elk/ - Elasticsearch + Logstash + Kibana
     ├── bank-gateway/ - API gateway
     ├── bank-accounts/
     ├── bank-cash/
@@ -170,6 +174,43 @@ Service Discovery реализован через Kubernetes DNS (ClusterIP Serv
 
 Сервисы автоматически получают `KAFKA_BOOTSTRAP_SERVERS=kafka:9092` через ConfigMap.
 
+## Zipkin
+![zipkin_trace.png](.images/zipkin_trace.png)
+![zipkin_trace_insufficientfunds.png](.images/zipkin_trace_insufficientfunds.png)
+
+- Используется **Micrometer Tracing + Brave** (`micrometer-tracing-bridge-brave`,  `zipkin-reporter-brave`).
+- Трассируются все HTTP-запросы, запросы в БД (`datasource-micrometer`) и все запросы к Kafka.
+
+По адрессу, если выложено в helm: `http://localhost/zipkin`.
+
+## Prometheus + Grafana
+![prometheus_alerts.png](.images/prometheus_alerts.png)
+![grafana_spring_boot_3x.png](.images/grafana_spring_boot_3x.png)
+![grafana_business_metrics.png](.images/grafana_business_metrics.png)
+
+- Каждый сервис и фронт отдают метрики через Spring Boot Actuator `/actuator/prometheus`
+- Prometheus отвечает за алерты. Есть правила: `/prometheus/alerts`.
+- Кастомные метрики покрывают: (почти везде приставка _failed - неуспешные попытки)
+- - `bank_cash_withdrawals_...` — снятие со счета;
+- - `bank_cash_deposit_...` — пополнение счета;
+- - `bank_transfer_...` — переводы со счета на счёт;
+- - `bank_transfer_retry_...` — повторные переводы после ошибки;
+- - `bank_notifications_...` — отправка уведомлений;
+
+- Grafana: преднастроенный datasource на Prometheus.
+- dashbord'ы для каждого сервиса шаблонные (spring boot 3.x), а также для кастомных метрик.
+
+Prometheus: `http://localhost/prometheus`
+Grafana: `http://localhost/grafana` (по стандарту пароль и логин admin/admin, но можно настроить в секретах).
+
+## ELK
+![kibana.png](.images/kibana.png)
+
+- Логгер: **SLF4J + Logback** с `logstash-logback-encoder`
+- В логах присутствуют `traceId` и `spanId` (из MDC).
+- Логи уходят в Logstash (должен быть активный профиль `logstash`), пишет в Elasticsearch (индекс `bank-logs-*`).
+- Просмотр логов: Kibana — `http://localhost/kibana`.
+
 # База данных
 ![db.png](.images/db.png)
 
@@ -192,8 +233,9 @@ Service Discovery реализован через Kubernetes DNS (ClusterIP Serv
 - AccountsClient - WebClient для вызова bank-accounts (debit, credit, getAccount) с circuit breaker.
 - NotificationClient - Kafka-продюсер для отправки уведомлений в топик `notifications` (формат JSON).
 - CurrentUser - аннотация, которая позволяет извлекать accountId из JWT токена (sub).
-- RequestIdFilter - генерация и пробрасывание traceId и spanId, запись для логгирования в MDC.
-- WebClientAutoConfiguration - автоконфигурация WebClient с OAuth2 client credentials и пробросом трейсинг-заголовков.
+- Трейсинг (traceId/spanId) обеспечивается Micrometer Tracing + Brave и попадает в MDC/логи автоматически.
+- WebClientAutoConfiguration - автоконфигурация WebClient с OAuth2 client credentials и observer'ом.
+- Logback-конфиг (`logback-spring.xml`) с JSON-форматом, который должен быть единым для всех сервисов, и отправкой логов в Logstash.
 - BankIntegrationTest, AbstractTestcontainersConfiguration (c PostgreSQL), CommonTestSecurityConfig (моки OAuth2), JwtTestUtils - для упрощения тестирования.
 
 ## bank-front-ui

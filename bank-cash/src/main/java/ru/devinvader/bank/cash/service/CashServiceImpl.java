@@ -32,6 +32,8 @@ public class CashServiceImpl implements CashService {
     @Override
     @Transactional
     @Timed(value = "bank.cash.deposit", description = "Пополнение счёта")
+    @Counted(value = "bank.cash.deposit.failed", recordFailuresOnly = true,
+            description = "Количество неудачных пополнений счёта")
     public CashResponse deposit(UUID accountId, CashRequest request) {
         var operation = cashMapper.toEntity(accountId, request, CashOperationType.DEPOSIT);
         repository.save(operation);

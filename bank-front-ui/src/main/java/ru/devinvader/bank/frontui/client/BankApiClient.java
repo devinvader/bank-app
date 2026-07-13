@@ -15,15 +15,10 @@ import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClient.ResponseSpec.ErrorHandler;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
 import ru.devinvader.bank.frontui.exception.*;
 import ru.devinvader.bank.frontui.mapper.FrontUiMapper;
 import ru.devinvader.bank.frontui.model.*;
 import ru.devinvader.bank.frontui.service.TokenProvider;
-
-import static ru.devinvader.bank.common.config.RequestIdFilter.SPAN_ID_ATTRIBUTE;
-import static ru.devinvader.bank.common.config.RequestIdFilter.TRACE_ID_ATTRIBUTE;
 
 @Slf4j
 @Component
@@ -42,7 +37,6 @@ public class BankApiClient {
                 .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
                 .requestInterceptor((request, body, execution) -> {
                     request.getHeaders().setBearerAuth(tokenProvider.getAccessToken());
-                    propagateTraceHeaders(request);
                     return execution.execute(request, body);
                 })
                 .build();
@@ -186,20 +180,6 @@ public class BankApiClient {
         if (resp.getStatusCode() == HttpStatus.UNAUTHORIZED)
             throw new UnauthorizedException("Unauthorized");
         throw new BadRequestException("Client error: " + resp.getStatusCode());
-    }
-
-    private static void propagateTraceHeaders(HttpRequest request) {
-        var attrs = RequestContextHolder.getRequestAttributes();
-        if (attrs != null) {
-            var spanId = (String) attrs.getAttribute(SPAN_ID_ATTRIBUTE, RequestAttributes.SCOPE_REQUEST);
-            var traceId = (String) attrs.getAttribute(TRACE_ID_ATTRIBUTE, RequestAttributes.SCOPE_REQUEST);
-            if (spanId != null) {
-                request.getHeaders().set("X-Span-Id", spanId);
-            }
-            if (traceId != null) {
-                request.getHeaders().set("X-Trace-Id", traceId);
-            }
-        }
     }
 
     private static ErrorHandler serverError(String service) {

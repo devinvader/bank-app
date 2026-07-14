@@ -1,0 +1,27 @@
+elasticsearch:
+  image:
+    repository: docker.elastic.co/elasticsearch/elasticsearch
+    tag: "8.15.0"
+  service:
+    name: elasticsearch
+    port: 9200
+  javaOpts: "-Xms512m -Xmx512m"
+
+logstash:
+  image:
+    repository: docker.elastic.co/logstash/logstash
+    tag: "8.15.0"
+  service:
+    name: logstash
+    tcpPort: 5000
+    apiPort: 9600
+  javaOpts: "-Xms256m -Xmx256m"
+  index: "bank-logs"
+
+kibana:
+  image:
+    repository: docker.elastic.co/kibana/kibana
+    tag: "8.15.0"
+  service:
+    name: kibana
+    port: 5601

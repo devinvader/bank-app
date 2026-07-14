@@ -2,6 +2,7 @@ package ru.devinvader.bank.accounts.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import io.micrometer.core.annotation.Timed;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.devinvader.bank.accounts.exception.AccountNotFoundException;
@@ -65,6 +66,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     @Transactional
+    @Timed(value = "bank.accounts.profile.update", description = "Обновления аккаунта")
     public AccountResponse update(UUID accountId, AccountRequest request) {
         validateAge(request.birthdate());
         var account = repository.findById(accountId)

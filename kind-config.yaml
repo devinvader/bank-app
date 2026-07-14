@@ -9,3 +9,6 @@ nodes:
       - containerPort: 443
         hostPort: 443
         protocol: TCP
+    extraMounts: # кэш контейнеров, ибо до этого всегда пересоздавалось и перекачивалось
+      - hostPath: /var/lib/kind-cache/bank-dev/containerd
+        containerPath: /var/lib/containerd

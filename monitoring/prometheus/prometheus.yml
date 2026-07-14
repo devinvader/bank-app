@@ -1,0 +1,28 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/alerting_rules.yml
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets:
+          - localhost:9090
+
+  - job_name: bank-microservices
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+          - bank-front-ui:8080
+          - bank-gateway:8081
+          - bank-accounts:8082
+          - bank-cash:8083
+          - bank-transfer:8084
+          - bank-notifications:8085
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '([^:]+):.*'
+        target_label: service
+        replacement: '$1'

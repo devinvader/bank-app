@@ -3,6 +3,8 @@ spring:
     name: bank-gateway
   lifecycle:
     timeout-per-shutdown-phase: 30s
+  reactor:
+    context-propagation: auto
   cloud:
     gateway:
       default-filters:
@@ -16,6 +18,8 @@ spring:
       httpclient:
         connect-timeout: 2000
         response-timeout: 10s
+        observation:
+          enabled: true
 
   security:
     oauth2:
@@ -75,7 +79,16 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,gateway
+        include: health,info,gateway,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  tracing:
+    sampling:
+      probability: 1.0
+    export:
+      zipkin:
+        endpoint: ${ZIPKIN_ENDPOINT:http://zipkin:9411/api/v2/spans}
 
 server:
   port: ${SERVER_PORT:8081}

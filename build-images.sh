@@ -54,10 +54,22 @@ SUB_CHARTS_IMAGES=(
     "docker.io/library/redis:7-alpine"
     "quay.io/keycloak/keycloak:latest"
     "docker.io/apache/kafka:3.9.0"
+    "docker.io/openzipkin/zipkin:3"
+    "quay.io/prometheus/prometheus:v3.13.1"
+    "quay.io/prometheus-operator/prometheus-config-reloader:v0.92.1"
+    "docker.io/grafana/grafana:12.3.1"
+    "docker.elastic.co/elasticsearch/elasticsearch:8.15.0"
+    "docker.elastic.co/logstash/logstash:8.15.0"
+    "docker.elastic.co/kibana/kibana:8.15.0"
 )
 NODES=$(kind get nodes --name "${CLUSTER_NAME}")
 for node in ${NODES}; do
     for img in "${SUB_CHARTS_IMAGES[@]}"; do
+        # если образ уже есть на ноде локально - не идём в реестр
+        if docker exec "${node}" crictl inspecti "${img}" &>/dev/null; then
+            echo "уже есть ${img}"
+            continue
+        fi
         echo "пулл ${img}"
         pulled=false
         for attempt in 1 2 3; do

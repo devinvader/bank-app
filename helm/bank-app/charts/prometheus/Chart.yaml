@@ -1,0 +1,10 @@
+apiVersion: v2
+name: prometheus
+description: Сервис для сбора, хранения и оповещений
+type: application
+version: 0.1.0
+appVersion: "3"
+dependencies:
+  - name: prometheus
+    version: 29.17.0
+    repository: https://prometheus-community.github.io/helm-charts

@@ -1,6 +1,7 @@
 package ru.devinvader.bank.frontui.contract;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import io.micrometer.observation.ObservationRegistry;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,7 @@ class ContractTest {
         var tokenProvider = mock(TokenProvider.class);
         when(tokenProvider.getAccessToken()).thenReturn("test-token");
 
-        bankApiClient = new BankApiClient(tokenProvider, baseUrl, RestClient.builder().requestFactory(factory), new FrontUiMapper());
+        bankApiClient = new BankApiClient(tokenProvider, baseUrl, RestClient.builder().requestFactory(factory), new FrontUiMapper(), ObservationRegistry.NOOP);
     }
 
     @AfterAll

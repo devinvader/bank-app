@@ -7,13 +7,17 @@ service:
   name: bank-gateway
   port: 80
   targetPort: 8081
-  config:
-    data:
-      SERVER_PORT: "8081"
-      KEYCLOAK_HOST: keycloak
-      KEYCLOAK_PORT: "80"
-      KEYCLOAK_REALM: bank
-      FRONT_UI_ORIGIN: "http://localhost"
-      ACCOUNTS_SERVICE_URL: "http://bank-accounts"
-      CASH_SERVICE_URL: "http://bank-cash"
-      TRANSFER_SERVICE_URL: "http://bank-transfer"
+config:
+  data:
+    SERVER_PORT: "8081"
+    KEYCLOAK_HOST: keycloak
+    KEYCLOAK_PORT: "80"
+    KEYCLOAK_REALM: bank
+    FRONT_UI_ORIGIN: "http://localhost"
+    ACCOUNTS_SERVICE_URL: "http://bank-accounts"
+    CASH_SERVICE_URL: "http://bank-cash"
+    TRANSFER_SERVICE_URL: "http://bank-transfer"
+    SPRING_PROFILES_ACTIVE: logstash
+    ZIPKIN_ENDPOINT: "http://zipkin:9411/api/v2/spans"
+    LOGSTASH_HOST: logstash
+    LOGSTASH_PORT: "5000"

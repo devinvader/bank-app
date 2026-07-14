@@ -26,7 +26,7 @@ deploy: build
 	helm dependency update $(HELM_CHART)
 	helm upgrade --install bank-app $(HELM_CHART) \
 		--namespace $(NAMESPACE) --create-namespace \
-		--wait --timeout 20m
+		--wait --timeout 5m
 
 clean:
 	helm uninstall bank-app -n $(NAMESPACE) || true

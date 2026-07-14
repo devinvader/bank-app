@@ -1,3 +1,6 @@
 ru.devinvader.bank.common.config.BankCommonAutoConfiguration
+ru.devinvader.bank.common.config.MetricsConfiguration
 ru.devinvader.bank.common.config.WebClientAutoConfiguration
+ru.devinvader.bank.common.config.RestClientAutoConfiguration
+ru.devinvader.bank.common.config.DataSourceTracingAutoConfiguration
 ru.devinvader.bank.common.config.KafkaProducerConfig

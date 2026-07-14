@@ -56,7 +56,7 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/error", "/oauth2/authorization/**", "/login-error").permitAll()
+                        .requestMatchers("/actuator/**", "/error", "/oauth2/authorization/**", "/login-error").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2

@@ -46,6 +46,10 @@ resilience4j:
     instances:
       accountsGateway:
         base-config: default
+        ignore-exceptions:
+          - ru.devinvader.bank.frontui.exception.InsufficientFundsException
+          - ru.devinvader.bank.frontui.exception.BadRequestException
+          - ru.devinvader.bank.frontui.exception.UnauthorizedException
       cashGateway:
         base-config: default
         ignore-exceptions:
@@ -72,7 +76,16 @@ management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health,info,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  tracing:
+    sampling:
+      probability: 1.0
+    export:
+      zipkin:
+        endpoint: ${ZIPKIN_ENDPOINT:http://zipkin:9411/api/v2/spans}
 
 server:
   port: ${SERVER_PORT:8080}

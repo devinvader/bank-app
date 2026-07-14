@@ -68,6 +68,31 @@ keycloak:
     adminPassword: admin
     dbPassword: postgres
 
+zipkin:
+  enabled: true
+  service:
+    name: zipkin
+    port: 9411
+
+prometheus:
+  enabled: true
+  service:
+    name: prometheus
+    port: 9090
+
+grafana:
+  enabled: true
+  service:
+    name: grafana
+    port: 3000
+
+elk:
+  enabled: true
+  kibana:
+    service:
+      name: kibana
+      port: 5601
+
 bank-accounts:
   enabled: true
   replicaCount: 1
@@ -82,6 +107,10 @@ bank-accounts:
       IMPORT_DEMO_DATA: "true"
       KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
       KAFKA_TOPIC_NOTIFICATIONS: "notifications"
+      SPRING_PROFILES_ACTIVE: logstash
+      ZIPKIN_ENDPOINT: "http://zipkin:9411/api/v2/spans"
+      LOGSTASH_HOST: logstash
+      LOGSTASH_PORT: "5000"
 
 bank-cash:
   enabled: true
@@ -97,6 +126,10 @@ bank-cash:
       ACCOUNTS_BASE_URL: "http://bank-accounts"
       KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
       KAFKA_TOPIC_NOTIFICATIONS: "notifications"
+      SPRING_PROFILES_ACTIVE: logstash
+      ZIPKIN_ENDPOINT: "http://zipkin:9411/api/v2/spans"
+      LOGSTASH_HOST: logstash
+      LOGSTASH_PORT: "5000"
   secret:
     data:
       KEYCLOAK_CLIENT_SECRET: cash-secret
@@ -115,6 +148,10 @@ bank-transfer:
       ACCOUNTS_BASE_URL: "http://bank-accounts"
       KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
       KAFKA_TOPIC_NOTIFICATIONS: "notifications"
+      SPRING_PROFILES_ACTIVE: logstash
+      ZIPKIN_ENDPOINT: "http://zipkin:9411/api/v2/spans"
+      LOGSTASH_HOST: logstash
+      LOGSTASH_PORT: "5000"
   secret:
     data:
       KEYCLOAK_CLIENT_SECRET: transfer-secret
@@ -135,6 +172,10 @@ bank-notifications:
       KAFKA_TOPIC_NOTIFICATIONS_PARTITIONS: "3"
       KAFKA_TOPIC_NOTIFICATIONS_REPLICAS: "1"
       KAFKA_TOPIC_NOTIFICATIONS_RETENTION_MS: "604800000"
+      SPRING_PROFILES_ACTIVE: logstash
+      ZIPKIN_ENDPOINT: "http://zipkin:9411/api/v2/spans"
+      LOGSTASH_HOST: logstash
+      LOGSTASH_PORT: "5000"
 
 bank-gateway:
   enabled: true
@@ -153,6 +194,10 @@ bank-gateway:
       ACCOUNTS_SERVICE_URL: "http://bank-accounts"
       CASH_SERVICE_URL: "http://bank-cash"
       TRANSFER_SERVICE_URL: "http://bank-transfer"
+      SPRING_PROFILES_ACTIVE: logstash
+      ZIPKIN_ENDPOINT: "http://zipkin:9411/api/v2/spans"
+      LOGSTASH_HOST: logstash
+      LOGSTASH_PORT: "5000"
 
 bank-front-ui:
   enabled: true
@@ -170,3 +215,7 @@ bank-front-ui:
       KEYCLOAK_EXTERNAL_URL: "http://localhost"
       KEYCLOAK_HOST: keycloak
       KEYCLOAK_PORT: "80"
+      SPRING_PROFILES_ACTIVE: logstash
+      ZIPKIN_ENDPOINT: "http://zipkin:9411/api/v2/spans"
+      LOGSTASH_HOST: logstash
+      LOGSTASH_PORT: "5000"

@@ -1,0 +1,63 @@
+groups:
+  - name: bank-app-http
+    rules:
+      - alert: HighHttp5xxRate
+        expr: sum(rate(http_server_requests_seconds_count{outcome="SERVER_ERROR"}[5m])) by (application) > 0.1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Сервис {{ $labels.application }} выдаёт много 500-сотых ошибок"
+          description: "{{ $labels.application }} возвращает ошибки в {{ $value }} запросах в секунду."
+      - alert: InstanceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Сервис {{ $labels.job }} отключен/не доступен слишком долго"
+          description: "Инстанс {{ $labels.instance }} недоступен в течение 1 минуты."
+  - name: bank-app-jvm
+    rules:
+      - alert: HighJvmHeapUsage
+        expr: sum(jvm_memory_used_bytes{area="heap"}) by (application) / sum(jvm_memory_max_bytes{area="heap"}) by (application) > 0.8
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Почти весь heap используется сервисом {{ $labels.application }}"
+          description: "80% heap используется сервисом {{ $labels.application }}"
+  - name: bank-app-business
+    rules:
+      - alert: HighDepositFailureRate
+        expr: sum(rate(bank_cash_deposit_failed_total[5m])) > 0.1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Пополнение наличных не работает"
+          description: "Больше 10% запросов за 5 минут на пополнение наличных закончилось ошибкой."
+      - alert: HighWithdrawalFailureRate
+        expr: sum(rate(bank_cash_withdrawals_failed_total[5m])) > 0.1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Снятие наличных не работает"
+          description: "Больше 10% запросов за 5 минут на снятие наличных закончилось ошибкой."
+      - alert: HighTransferFailureRate
+        expr: sum(rate(bank_transfer_failed_total[5m])) > 0.1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Перевод не работает"
+          description: "Больше 10% запросов за 5 минут на перевод закончилось ошибкой."
+      - alert: NotificationDeliveryFailures
+        expr: sum(rate(bank_notifications_failed_total[5m])) > 0.1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Уведомления не работают"
+          description: "Больше 10% запросов за 5 минут на отправку уведомлений закончилось ошибкой."

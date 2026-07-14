@@ -104,6 +104,10 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      zipkin:
+        condition: service_started
+      logstash:
+        condition: service_started
     env_file: .env
     environment:
       SERVER_PORT: 8082
@@ -112,6 +116,10 @@ services:
       REDIS_HOST: redis
       IMPORT_DEMO_DATA: ${IMPORT_DEMO_DATA:-false}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_PROFILES_ACTIVE: logstash
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
+      LOGSTASH_HOST: logstash
+      LOGSTASH_PORT: "5000"
     networks:
       - bank-network
 
@@ -127,6 +135,10 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      zipkin:
+        condition: service_started
+      logstash:
+        condition: service_started
     env_file: .env
     environment:
       SERVER_PORT: 8083
@@ -136,6 +148,10 @@ services:
       KEYCLOAK_CLIENT_SECRET: cash-secret
       ACCOUNTS_BASE_URL: http://bank-accounts:8082
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_PROFILES_ACTIVE: logstash
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
+      LOGSTASH_HOST: logstash
+      LOGSTASH_PORT: "5000"
     networks:
       - bank-network
 
@@ -151,6 +167,10 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      zipkin:
+        condition: service_started
+      logstash:
+        condition: service_started
     env_file: .env
     environment:
       SERVER_PORT: 8084
@@ -160,6 +180,10 @@ services:
       KEYCLOAK_CLIENT_SECRET: transfer-secret
       ACCOUNTS_BASE_URL: http://bank-accounts:8082
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_PROFILES_ACTIVE: logstash
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
+      LOGSTASH_HOST: logstash
+      LOGSTASH_PORT: "5000"
     networks:
       - bank-network
 
@@ -173,6 +197,10 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      zipkin:
+        condition: service_started
+      logstash:
+        condition: service_started
     env_file: .env
     environment:
       SERVER_PORT: 8085
@@ -180,6 +208,10 @@ services:
       DB_HOST: postgres
       REDIS_HOST: redis
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_PROFILES_ACTIVE: logstash
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
+      LOGSTASH_HOST: logstash
+      LOGSTASH_PORT: "5000"
     networks:
       - bank-network
 
@@ -193,6 +225,10 @@ services:
         condition: service_healthy
       keycloak:
         condition: service_healthy
+      zipkin:
+        condition: service_started
+      logstash:
+        condition: service_started
     env_file: .env
     environment:
       SERVER_PORT: 8081
@@ -202,6 +238,10 @@ services:
       ACCOUNTS_SERVICE_URL: http://bank-accounts:8082
       CASH_SERVICE_URL: http://bank-cash:8083
       TRANSFER_SERVICE_URL: http://bank-transfer:8084
+      SPRING_PROFILES_ACTIVE: logstash
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
+      LOGSTASH_HOST: logstash
+      LOGSTASH_PORT: "5000"
     networks:
       - bank-network
 
@@ -217,20 +257,118 @@ services:
         condition: service_healthy
       keycloak:
         condition: service_healthy
+      zipkin:
+        condition: service_started
+      logstash:
+        condition: service_started
     env_file: .env
     environment:
       SERVER_PORT: 8080
       DB_HOST: postgres
       REDIS_HOST: redis
       GATEWAY_SERVICE_ID: bank-gateway:8081
+      SPRING_PROFILES_ACTIVE: logstash
+      ZIPKIN_ENDPOINT: http://zipkin:9411/api/v2/spans
+      LOGSTASH_HOST: logstash
+      LOGSTASH_PORT: "5000"
     ports:
       - "8080:8080"
+    networks:
+      - bank-network
+
+  zipkin:
+    image: openzipkin/zipkin:3
+    container_name: bank-zipkin
+    environment:
+      STORAGE_TYPE: mem
+    ports:
+      - "9411:9411"
+    networks:
+      - bank-network
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    container_name: bank-elasticsearch
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - bank-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.15.0
+    container_name: bank-logstash
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      LS_JAVA_OPTS: "-Xms256m -Xmx256m"
+    volumes:
+      - ./helm/bank-app/charts/elk/config/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./monitoring/logstash/pipeline.conf:/usr/share/logstash/pipeline/logstash.conf
+    ports:
+      - "5000:5000"
+      - "9600:9600"
+    networks:
+      - bank-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.0
+    container_name: bank-kibana
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    networks:
+      - bank-network
+
+  prometheus:
+    image: prom/prometheus:v3.13.1
+    container_name: bank-prometheus
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./helm/bank-app/charts/prometheus/alerts/alerting_rules.yml:/etc/prometheus/alerting_rules.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - bank-network
+
+  grafana:
+    image: grafana/grafana:12.3.1
+    container_name: bank-grafana
+    depends_on:
+      - prometheus
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./helm/bank-app/charts/grafana/dashboards:/var/lib/grafana/dashboards
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
     networks:
       - bank-network
 
 volumes:
   postgres-data:
   kafka-data:
+  es-data:
+  grafana-data:
 
 networks:
   bank-network:

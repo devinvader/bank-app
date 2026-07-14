@@ -1,5 +1,7 @@
 package ru.devinvader.bank.notifications.service;
 
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -17,6 +19,9 @@ public class NotificationKafkaConsumer {
     @KafkaListener(topics = "${kafka.topic.notifications.name:notifications}",
             groupId = "${spring.kafka.consumer.group-id:notifications-group}",
             containerFactory = "notificationKafkaListenerContainerFactory")
+    @Timed(value = "bank.notifications.process", description = "Время обработки уведомлений")
+    @Counted(value = "bank.notifications.failed", recordFailuresOnly = true,
+            description = "Неудачная обработка уведомлений")
     public void consume(ConsumerRecord<String, NotificationRequest> record) {
         log.info("Received notification: key={}, topic={}, partition={}, offset={}, type={}, accountId={}",
                 record.key(), record.topic(), record.partition(), record.offset(),

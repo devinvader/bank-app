@@ -1,6 +1,9 @@
 package ru.devinvader.bank.cash.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.devinvader.bank.cash.mapper.CashMapper;
@@ -18,6 +21,7 @@ import java.util.UUID;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class CashServiceImpl implements CashService {
     private final CashRepository repository;
     private final AccountsClient accountsClient;
@@ -25,20 +29,11 @@ public class CashServiceImpl implements CashService {
     private final NotificationMessages notificationMessages;
     private final CashMapper cashMapper;
 
-    public CashServiceImpl(CashRepository repository,
-                           AccountsClient accountsClient,
-                           NotificationClient notificationClient,
-                           NotificationMessages notificationMessages,
-                           CashMapper cashMapper) {
-        this.repository = repository;
-        this.accountsClient = accountsClient;
-        this.notificationClient = notificationClient;
-        this.notificationMessages = notificationMessages;
-        this.cashMapper = cashMapper;
-    }
-
     @Override
     @Transactional
+    @Timed(value = "bank.cash.deposit", description = "Пополнение счёта")
+    @Counted(value = "bank.cash.deposit.failed", recordFailuresOnly = true,
+            description = "Количество неудачных пополнений счёта")
     public CashResponse deposit(UUID accountId, CashRequest request) {
         var operation = cashMapper.toEntity(accountId, request, CashOperationType.DEPOSIT);
         repository.save(operation);
@@ -53,6 +48,9 @@ public class CashServiceImpl implements CashService {
 
     @Override
     @Transactional
+    @Timed(value = "bank.cash.withdraw", description = "Снятие со счёта")
+    @Counted(value = "bank.cash.withdrawals.failed", recordFailuresOnly = true,
+            description = "Количество неудачных снятий со счёта")
     public CashResponse withdraw(UUID accountId, CashRequest request) {
         var operation = cashMapper.toEntity(accountId, request, CashOperationType.WITHDRAWAL);
         repository.save(operation);

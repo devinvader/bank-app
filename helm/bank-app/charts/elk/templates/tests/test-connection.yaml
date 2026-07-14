@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "elk-test"
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: test
+      image: curlimages/curl:latest
+      command:
+        - sh
+        - -c
+        - |
+          curl -f http://{{ .Values.elasticsearch.service.name }}:{{ .Values.elasticsearch.service.port }}/_cluster/health &&
+          curl -f http://{{ .Values.kibana.service.name }}:{{ .Values.kibana.service.port }}{{ .Values.kibana.basePath }}/api/status
+  restartPolicy: Never

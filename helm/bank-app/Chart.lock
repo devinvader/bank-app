@@ -14,6 +14,18 @@ dependencies:
 - name: keycloak
   repository: ""
   version: 0.1.0
+- name: zipkin
+  repository: ""
+  version: 0.1.0
+- name: prometheus
+  repository: ""
+  version: 0.1.0
+- name: grafana
+  repository: ""
+  version: 0.1.0
+- name: elk
+  repository: ""
+  version: 0.1.0
 - name: bank-accounts
   repository: ""
   version: 0.1.0
@@ -32,5 +44,5 @@ dependencies:
 - name: bank-front-ui
   repository: ""
   version: 0.1.0
-digest: sha256:a74c444dbf9f7417e0cb8a88cd1a54bea232d6b174cf70295ed5ef83946352c8
-generated: "2026-07-08T21:56:38.173681888+03:00"
+digest: sha256:839722df12bfb103964a83d15759cd7749c27ca6228186bce17b4574672e56c6
+generated: "2026-07-10T09:27:08.1574434+03:00"

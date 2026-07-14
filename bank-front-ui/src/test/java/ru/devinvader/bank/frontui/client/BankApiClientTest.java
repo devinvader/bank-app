@@ -1,5 +1,6 @@
 package ru.devinvader.bank.frontui.client;
 
+import io.micrometer.observation.ObservationRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -34,7 +35,7 @@ class BankApiClientTest {
 
         var testBuilder = RestClient.builder();
         server = MockRestServiceServer.bindTo(testBuilder).build();
-        bankApiClient = new BankApiClient(tokenProvider, "localhost:8081", testBuilder, new FrontUiMapper());
+        bankApiClient = new BankApiClient(tokenProvider, "localhost:8081", testBuilder, new FrontUiMapper(), ObservationRegistry.NOOP);
     }
 
     @Test

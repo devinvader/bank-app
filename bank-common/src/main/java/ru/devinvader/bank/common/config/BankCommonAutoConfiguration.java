@@ -13,11 +13,6 @@ import ru.devinvader.bank.common.model.NotificationMessages;
 public class BankCommonAutoConfiguration {
 
     @Bean
-    public RequestIdFilter requestIdFilter() {
-        return new RequestIdFilter();
-    }
-
-    @Bean
     public MessageSource notificationMessageSource() {
         var messageSource = new ReloadableResourceBundleMessageSource();
         messageSource.setBasename("classpath:notification-messages");

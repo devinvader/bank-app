@@ -1,0 +1,14 @@
+{{- if .Files.Get "alerts/alerting_rules.yml" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-custom-alert-rules
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: prometheus
+    component: server
+    release: {{ .Release.Name }}
+data:
+  alerting_rules.yml: |
+{{ .Files.Get "alerts/alerting_rules.yml" | indent 4 }}
+{{- end }}
